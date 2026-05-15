@@ -1,3 +1,11 @@
+"""
+This script contains the plotting functions.
+It creates interactive plots using Plotly for:
+- age profile
+- spinal profile
+"""
+
+
 import plotly.graph_objects as go
 
 
@@ -109,6 +117,7 @@ def plot_age_profile(df, metric, slice, sex):
 
     fig = go.Figure()
 
+    # Add a trace for each sex
     for s in sex:
         dffs = dff_mean[dff_mean["sex_bin"] == s]
         label = "Male" if s == 0 else "Female"
@@ -143,6 +152,7 @@ def plot_spinal_profile(df, metric, age, sex):
 
     fig = go.Figure()
 
+     # Add a trace for each sex
     for s in sex:
         dffs = dff_mean[dff_mean["sex_bin"] == s]
 

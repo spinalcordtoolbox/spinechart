@@ -1,3 +1,10 @@
+"""
+This script contains the callback functions used to update the interactive plots:
+- age profile
+- spinal profile
+according to the UI inputs (metric, age, slice, sex)
+"""
+
 from dash import Input, Output
 
 from plots import plot_age_profile, plot_spinal_profile

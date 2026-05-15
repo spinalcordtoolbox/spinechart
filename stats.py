@@ -1,3 +1,12 @@
+"""
+This script handles the normative model pipeline.
+It:
+- Uses neuroComBat to account for the site effects
+- Fits a Gam for each metric
+- Generates a prediction grid across age, slice level, and sex
+- Produces normative trajectories for each metric across the prediction grid
+"""
+
 from pygam import LinearGAM, s, f
 import numpy as np
 import pandas as pd

@@ -1,3 +1,11 @@
+"""
+This script generates the Dash app layout
+It:
+- Creates a left side bar to select the metric using a dropdown
+- Organizes two main visualization panels, and provides controls for selecting controls age/slice and sex
+- Connects these elements to callback IDs used for interactive updates
+"""
+
 from dash import dcc, html
 
 METRIC_TO_TITLE = {
@@ -14,6 +22,7 @@ def create_layout(df):
 
     return html.Div([
 
+        # Title
         html.H1(
             children="Spinal Cord Normative Chart",
             style={'textAlign': 'center'}
@@ -22,7 +31,7 @@ def create_layout(df):
         # Main layout
         html.Div([
 
-            # LEFT
+            # LEFT SIDE BAR
             html.Div([
 
                 html.H3("Metric Selection"),
@@ -57,7 +66,7 @@ def create_layout(df):
                     dcc.Slider(
                         min=df["Slice (I->S)"].min(),
                         max=df["Slice (I->S)"].max(),
-                        step=50,
+                        step=50, #Problem when selecting the slice with slider: step size is inconsistent
                         value=int(df["Slice (I->S)"].median()),
                         id="slice"
                     ),

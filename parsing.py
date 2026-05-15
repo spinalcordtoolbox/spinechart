@@ -1,3 +1,10 @@
+# This script handles the data parsing pipeline
+# It:
+# - Automatically finds dataset folders containing CSV files and metadata (participants.tsv)
+# - Loads and merges all dataset files into a single dataframe
+# - Cleans the combined dataset
+# - Outputs a dataframe ready to be used in the normative model pipeline
+
 import pandas as pd
 
 
@@ -71,6 +78,7 @@ def clean_data(df):
     Clean the df:
     - Removes NaN values
     - Binary index for sex
+    - Index for site
     """
     clean = df.dropna(subset=["MEAN(area)", "age", ]).copy()
 

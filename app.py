@@ -1,3 +1,12 @@
+"""
+This script launches the Dash app.
+It:
+- Loads the files from the local directory ./data, and parse them
+- Runs the normative pipeline
+- Initializes the Dash app
+- Sets up the UI layout and interactive callbacks
+"""
+
 from dash import Dash
 from pathlib import Path
 
