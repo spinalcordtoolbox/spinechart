@@ -41,8 +41,16 @@ def combat_harmonization(df, metrics=METRICS, site_col="site_id"):
         "Slice (I->S)"
     ]].copy()
 
+    # neuroCombat does not infer covariate types — any column in `covars` not
+    # listed in categorical_cols or continuous_cols is silently dropped from
+    # the design matrix and its effect is NOT preserved.
     categorical_cols = [
         "sex_bin"
+    ]
+
+    continuous_cols = [
+        "age",
+        "Slice (I->S)"
     ]
 
     # Run ComBat
@@ -50,7 +58,8 @@ def combat_harmonization(df, metrics=METRICS, site_col="site_id"):
         dat=data,
         covars=covars,
         batch_col=site_col,
-        categorical_cols=categorical_cols
+        categorical_cols=categorical_cols,
+        continuous_cols=continuous_cols
     )
 
     harmonized_data = combat_output["data"]
