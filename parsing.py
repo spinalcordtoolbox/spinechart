@@ -1,32 +1,80 @@
-# This script handles the data parsing pipeline
-# It:
-# - Automatically finds dataset folders containing CSV files and metadata (participants.tsv)
-# - Loads and merges all dataset files into a single dataframe
-# - Cleans the combined dataset
-# - Outputs a dataframe ready to be used in the normative model pipeline
+"""
+This script handles the data parsing pipeline
+It:
+- Automatically finds dataset folders containing CSV files and metadata (participants.tsv)
+- Loads and merges all dataset files into a single dataframe
+- Cleans the combined dataset
+- Outputs a dataframe ready to be used in the normative model pipeline
+"""
 
 import pandas as pd
+from pathlib import Path
+import subprocess
 
 
-# REPO_URL = "https://github.com/spinalcordtoolbox/PAM50-normalized-metrics.git"
+REPO_URL = "https://github.com/spinalcordtoolbox/PAM50-normalized-metrics.git"
+
+DATA_ROOT = Path("data/PAM50-normalized-metrics")
+
+
+def fetch_normative_database(repo_url=REPO_URL, local_path=DATA_ROOT):
+    """
+    Downloads the normative database if it does not exist.
+    Otherwise updates it using git pull.
+
+    Returns
+    -------
+    Path
+        Local path to the repository
+    """
+
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not local_path.exists():
+        print(f"Cloning repository into: {local_path}")
+
+        subprocess.run(
+            ["git", "clone", repo_url, str(local_path)],
+            check=True,
+        )
+
+    else:
+        print(f"Updating repository in: {local_path}")
+
+        subprocess.run(
+            ["git", "-C", str(local_path), "pull"],
+            check=True,
+        )
+
+    return local_path
+
 
 
 def find_datasets(root):
     """
     Finds all dataset folders containing CSV + participants.tsv
     """
-    datasets = []
+    dataset_dir = (
+        root
+        / "spinal_cord"
+        / "spine-generic_multi-subject"
+    )
 
-    for dataset_dir in root.rglob("*"):
-        if dataset_dir.is_dir():
+    if not dataset_dir.exists():
+        raise ValueError(f"Dataset folder not found: {dataset_dir}")
 
-            csvs = list(dataset_dir.rglob("*.csv"))
-            tsv = list(dataset_dir.rglob("participants.tsv"))
+    required_files = [
+        dataset_dir / "participants.tsv",
+        dataset_dir / "dataset_description.json",
+    ]
 
-            if csvs and tsv:
-                datasets.append(dataset_dir)
+    has_required = all(f.exists() for f in required_files)
+    has_csv = any(dataset_dir.glob("*.csv"))
 
-    return datasets
+    if not (has_required and has_csv):
+        raise ValueError(f"Invalid dataset structure in: {dataset_dir}")
+
+    return [dataset_dir]
 
 
 
@@ -93,7 +141,8 @@ def clean_data(df):
 
 
 
-def run_parsing_pipeline(path):
+def run_parsing_pipeline():
+    path = fetch_normative_database()
     datasets = find_datasets(path)
     
     dfs = []

@@ -8,7 +8,6 @@ It:
 """
 
 from dash import Dash
-from pathlib import Path
 
 from parsing import run_parsing_pipeline
 from stats import run_normative
@@ -17,7 +16,7 @@ from callbacks import register_callbacks
 
 
 
-df = run_parsing_pipeline(Path("./data"))
+df = run_parsing_pipeline()
 
 norm_df = run_normative(df)
 
