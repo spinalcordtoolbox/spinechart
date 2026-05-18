@@ -1,0 +1,6 @@
+pandas
+numpy
+pygam
+neuroCombat
+dash
+plotly
