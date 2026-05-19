@@ -196,19 +196,17 @@ def plot_spinal_profile(df, metric, age, sex):
     # Horizontal separator bar
     fig.add_shape(
         type="line",
-        x0=min(dff["Slice (I->S)"]),
-        x1=max(dff["Slice (I->S)"]),
+        x0=0,
+        x1=1,
         y0=0,
         y1=0,
-        xref="x",
+        xref="paper",
         yref="paper",
-        line=dict(
-            color="black",
-            width=1
-        )
+        line=dict(color="black", width=1)
     )
 
-    # Vertebral labels at bottom
+
+    # Vertebral labels annotations
     for x, label in zip(mids, labels):
 
         fig.add_annotation(
@@ -221,30 +219,10 @@ def plot_spinal_profile(df, metric, age, sex):
 
             showarrow=False,
 
-            # xanchor="center",
-            # yanchor="bottom",
-
-            font=dict(
-                size=12,
-                color="black"
-            )
+            font=dict(size=12, color="black")
         )
     
-    # # Add vertebral labels
-    # for x, label in zip(mids, labels):
-
-    #     fig.add_annotation(
-    #         x=x,
-    #         y=1.02,
-    #         xref="x",
-    #         yref="paper",
-    #         text=label,
-    #         showarrow=False,
-    #         xanchor="center",
-    #         yanchor="bottom",
-    #         font=dict(size=12)
-    #     )
-
+    # Add vertebral labels
     fig.update_layout(
         title=f"{METRIC_TO_TITLE[metric]} vs Slice (Age {age})",
         xaxis_title="Slice",
@@ -269,13 +247,11 @@ def get_vert_ticks(df):
     Get vertebral boundary ticks and midpoint labels for plotting.
 
     Args:
-        df (pd.DataFrame): dataframe containing:
-            - 'Slice (I->S)'
-            - 'VertLevel'
+        df (pd.DataFrame): dataframe comprising 'Slice (I->S)' and 'VertLevel' columns
 
     Returns:
         vert_ticks (np.array):
-            Slice positions where vertebral levels begin/change
+            Slice positions where vertebral levels change
 
         vert_mid (list):
             Mid-slice positions for vertebral labels
