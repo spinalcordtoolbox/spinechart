@@ -117,7 +117,7 @@ def create_prediction_grid(df):
     return pd.DataFrame(grid, columns=["age", "Slice (I->S)", "sex_bin"])
 
 
-def normative_model(models, grid):
+def normative_model(models, grid, df):
     """
     Predict all metrics on the grid
     """
@@ -129,6 +129,9 @@ def normative_model(models, grid):
     for metric, gam in models.items():
 
         results[f"{metric}"] = gam.predict(X)
+        
+    slice_to_vert = df[["Slice (I->S)", "VertLevel"]].drop_duplicates().set_index("Slice (I->S)")["VertLevel"].to_dict()
+    results["VertLevel"] = results["Slice (I->S)"].map(slice_to_vert)
 
     return results
 
@@ -141,7 +144,7 @@ def run_normative(df):
 
     # Fitting on new data
     grid = create_prediction_grid(df_harmonized)
-    df_norm = normative_model(models, grid)
+    df_norm = normative_model(models, grid, df)
 
     return df_norm
 
