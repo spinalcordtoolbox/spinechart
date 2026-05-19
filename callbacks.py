@@ -17,7 +17,7 @@ def register_callbacks(app, df):
     @app.callback(
         Output("age-plot", "figure"),
         Input("metric", "value"),
-        Input("slice", "value"),
+        Input("level", "value"),
         Input("sex-age", "value")
     )
     def update_age(metric, slice_value, sex):

@@ -16,6 +16,23 @@ METRIC_TO_TITLE = {
     'MEAN(solidity)': 'Solidity',
 }
 
+MID_VERT_DICT = {
+    14: 'T7',
+    13: 'T6',
+    12: 'T5',
+    11: 'T4',
+    10: 'T3',
+    9: 'T2',
+    8: 'T1',
+    7: 'C7',
+    6: 'C6',
+    5: 'C5',
+    4: 'C4',
+    3: 'C3',
+    2: 'C2',
+    1: 'C1'
+}
+
 def create_layout(df):
 
     metrics = [col for col in df.columns if "MEAN" in col]
@@ -63,12 +80,13 @@ def create_layout(df):
                     html.H3("Age Plot Controls"),
 
                     html.Label('Slice'),
-                    dcc.Slider(
-                        min=df["Slice (I->S)"].min(),
-                        max=df["Slice (I->S)"].max(),
-                        step=50, #Problem when selecting the slice with slider: step size is inconsistent
-                        value=int(df["Slice (I->S)"].median()),
-                        id="slice"
+                    dcc.RangeSlider(
+                        min=df["VertLevel"].min(),
+                        max=df["VertLevel"].max(),
+                        step=1,
+                        value=[int(df["VertLevel"].median()), int(df["VertLevel"].median())+1],
+                        marks=MID_VERT_DICT,
+                        id="level"
                     ),
 
                     html.Br(),
