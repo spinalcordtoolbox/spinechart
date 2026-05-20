@@ -137,11 +137,9 @@ def plot_age_profile(df, metric, level, sex):
             line=dict(width=3, color=COLORS_SEX[s]),
             hovertemplate='Age : %{x}, Mean : %{y:.2f} <extra></extra>'
         ))
-        
-    list_vert = " to ".join([MID_VERT_DICT[x] for x in level])
 
     fig.update_layout(
-        title=f"{METRIC_TO_TITLE[metric]} vs Age (Level {list_vert})",
+        title=f"{METRIC_TO_TITLE[metric]} vs Age (Level {level[0]} to {level[1]})",
         xaxis_title="Age (years)",
         yaxis_title=METRIC_TO_AXIS[metric]
     )
@@ -157,7 +155,7 @@ def plot_age_profile(df, metric, level, sex):
 
 def plot_spinal_profile(df, metric, age, sex):
     # compute mean per slice and sex
-    dff = df[(df["age"] == age) & df["sex_bin"].isin(sex)]
+    dff = df[(df["age"].between(age[0], age[1])) & df["sex_bin"].isin(sex)]
     dff_mean = (
         dff.groupby(["Slice (I->S)", "sex_bin"], as_index=False)[metric]
         .mean()
@@ -224,7 +222,7 @@ def plot_spinal_profile(df, metric, age, sex):
     
     # Add vertebral labels
     fig.update_layout(
-        title=f"{METRIC_TO_TITLE[metric]} vs Slice (Age {age})",
+        title=f"{METRIC_TO_TITLE[metric]} vs Slice (Age {age[0]} to {age[1]})",
         xaxis_title="Slice",
         yaxis_title=METRIC_TO_AXIS[metric]
     )

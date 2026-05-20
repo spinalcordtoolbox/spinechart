@@ -86,8 +86,6 @@ def create_layout(df):
                         step=1,
                         value=[int(df["VertLevel"].median()), int(df["VertLevel"].median())+1],
                         marks=MID_VERT_DICT,
-                        tooltip={"always_visible": False},
-                        allowCross=False,
                         id="level"
                     ),
 
@@ -113,11 +111,11 @@ def create_layout(df):
                     html.H3("Spinal Plot Controls"),
 
                     html.Label('Age'),
-                    dcc.Slider(
+                    dcc.RangeSlider(
                         min=df["age"].min(),
                         max=df["age"].max(),
                         step=1,
-                        value=int(df["age"].median()),
+                        value=[int(df["age"].median()), int(df["age"].median())+1],
                         id="age"
                     ),
 
