@@ -1,0 +1,8 @@
+/* Hide the left/right numeric boxes of RangeSlider */
+.dash-range-slider-input {
+    display: none !important;
+}
+
+.dash-range-slider-inputs {
+    display: none !important;
+}
