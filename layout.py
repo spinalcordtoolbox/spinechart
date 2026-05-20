@@ -79,13 +79,15 @@ def create_layout(df):
 
                     html.H3("Age Plot Controls"),
 
-                    html.Label('Slice'),
+                    html.Label('Vertebral level'),
                     dcc.RangeSlider(
                         min=df["VertLevel"].min(),
                         max=df["VertLevel"].max(),
                         step=1,
                         value=[int(df["VertLevel"].median()), int(df["VertLevel"].median())+1],
                         marks=MID_VERT_DICT,
+                        tooltip={"always_visible": False},
+                        allowCross=False,
                         id="level"
                     ),
 
