@@ -20,11 +20,11 @@ def register_callbacks(app, df):
         Input("level", "value"),
         Input("sex-age", "value")
     )
-    def update_age(metric, slice_value, sex):
+    def update_age(metric, level, sex):
 
         sex_codes = [SEX_MAP[s] for s in sex]
 
-        return plot_age_profile(df, metric, slice_value, sex_codes)
+        return plot_age_profile(df, metric, level, sex_codes)
 
 
     @app.callback(

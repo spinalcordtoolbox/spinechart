@@ -77,16 +77,19 @@ def create_layout(df):
                 # AGE PLOT
                 html.Div([
 
-                    html.H3("Age Plot Controls"),
+                    html.H3("Age Plot"),
 
                     html.Label('Vertebral level'),
-                    dcc.RangeSlider(
-                        min=df["VertLevel"].min(),
-                        max=df["VertLevel"].max(),
-                        step=1,
-                        value=[int(df["VertLevel"].median()), int(df["VertLevel"].median())+1],
-                        marks=MID_VERT_DICT,
-                        id="level"
+                    html.Div(
+                        dcc.Slider(
+                            min=df["VertLevel"].min(),
+                            max=df["VertLevel"].max(),
+                            step=1,
+                            value=int(df["VertLevel"].median()),
+                            marks=MID_VERT_DICT,
+                            id="level",
+                        ),
+                        className="simple-slider"
                     ),
 
                     html.Br(),
@@ -108,7 +111,7 @@ def create_layout(df):
                 # SPINAL PLOT
                 html.Div([
 
-                    html.H3("Spinal Plot Controls"),
+                    html.H3("Spinal Plot"),
 
                     html.Label('Age'),
                     dcc.RangeSlider(

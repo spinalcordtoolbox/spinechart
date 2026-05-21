@@ -111,7 +111,7 @@ PALETTE = {
 def plot_age_profile(df, metric, level, sex):
     # compute mean per age and sex
     dff = df[
-        (df["VertLevel"].between(level[0], level[1]))
+        (df["VertLevel"]==level)
         & (df["sex_bin"].isin(sex))
     ]
 
@@ -139,7 +139,7 @@ def plot_age_profile(df, metric, level, sex):
         ))
 
     fig.update_layout(
-        title=f"{METRIC_TO_TITLE[metric]} vs Age (Level {level[0]} to {level[1]})",
+        title=f"{METRIC_TO_TITLE[metric]} vs Age (Level {level})",
         xaxis_title="Age (years)",
         yaxis_title=METRIC_TO_AXIS[metric]
     )
