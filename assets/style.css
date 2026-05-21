@@ -1,8 +1,13 @@
-/* Hide the left/right numeric boxes of RangeSlider */
+/* Hide the left/right numeric boxes of the sliders */
 .dash-range-slider-input {
     display: none !important;
 }
 
 .dash-range-slider-inputs {
     display: none !important;
+}
+
+/* Transparent background for simple slider */
+.simple-slider .dash-slider-range {
+    background-color: transparent !important;
 }
