@@ -63,7 +63,7 @@ METRICS_TO_YLIM = {
     'MEAN(diameter_RL)': (6, 14.5), #(15, 35),
     'MEAN(compression_ratio)': (0.41, 0.84),
     'MEAN(eccentricity)': (0.51, 0.89),
-    'MEAN(solidity)': (0.95, 0.99),
+    'MEAN(solidity)': (95, 99.9),
 }
 
 DISCS_DICT = {

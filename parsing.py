@@ -125,11 +125,14 @@ def clean_data(df):
     """
     Clean the df:
     - Removes NaN values
+    - Convert Solidity values into percentage values
     - Computes AP/RL ratio
     - Binary index for sex
     - Index for site
     """
     clean = df.dropna(subset=["MEAN(area)", "age", ]).copy()
+    
+    clean["MEAN(solidity)"] = clean["MEAN(solidity)"] * 100
     
     clean["MEAN(compression_ratio)"] = clean["MEAN(diameter_AP)"] / clean["MEAN(diameter_RL)"]
 
