@@ -7,36 +7,11 @@ It:
 """
 
 from dash import dcc, html
+from config.metrics import METRICS, METRIC_CONFIG
+from config.anatomy import MID_VERT_DICT
 
-METRIC_TO_TITLE = {
-    'MEAN(diameter_AP)': 'AP Diameter',
-    'MEAN(area)': 'Cross-Sectional Area',
-    'MEAN(diameter_RL)': 'Transverse Diameter',
-    'MEAN(compression_ratio)': 'AP/RL Ratio',
-    'MEAN(eccentricity)': 'Eccentricity',
-    'MEAN(solidity)': 'Solidity',
-}
-
-MID_VERT_DICT = {
-    14: 'T7',
-    13: 'T6',
-    12: 'T5',
-    11: 'T4',
-    10: 'T3',
-    9: 'T2',
-    8: 'T1',
-    7: 'C7',
-    6: 'C6',
-    5: 'C5',
-    4: 'C4',
-    3: 'C3',
-    2: 'C2',
-    1: 'C1'
-}
 
 def create_layout(df):
-
-    metrics = [col for col in df.columns if "MEAN" in col]
 
     return html.Div([
 
@@ -57,10 +32,9 @@ def create_layout(df):
                 html.Label('Metric'),
                 dcc.Dropdown(
                     options=[
-                        {"label": METRIC_TO_TITLE[m], "value": m}
-                        for m in metrics
+                        {"label": METRIC_CONFIG[m]["title"], "value": m} for m in METRICS
                     ],
-                    value=metrics[0],
+                    value=METRICS[0],
                     id="metric"
                 ),
 
