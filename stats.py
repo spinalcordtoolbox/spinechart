@@ -17,6 +17,7 @@ METRICS = [
 "MEAN(area)",
 "MEAN(diameter_AP)",
 "MEAN(diameter_RL)",
+'MEAN(compression_ratio)',
 "MEAN(eccentricity)",
 "MEAN(solidity)"
 ]

@@ -12,6 +12,7 @@ METRIC_TO_TITLE = {
     'MEAN(diameter_AP)': 'AP Diameter',
     'MEAN(area)': 'Cross-Sectional Area',
     'MEAN(diameter_RL)': 'Transverse Diameter',
+    'MEAN(compression_ratio)': 'AP/RL Ratio',
     'MEAN(eccentricity)': 'Eccentricity',
     'MEAN(solidity)': 'Solidity',
 }
