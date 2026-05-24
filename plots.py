@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-METRICS = ['MEAN(area)', 'MEAN(diameter_AP)', 'MEAN(diameter_RL)', 'MEAN(eccentricity)',
+METRICS = ['MEAN(area)', 'MEAN(diameter_AP)', 'MEAN(diameter_RL)', 'MEAN(compression_ratio)', 'MEAN(eccentricity)',
            'MEAN(solidity)']
 
 METRICS_DTYPE = {
@@ -25,6 +25,7 @@ METRIC_TO_TITLE = {
     'MEAN(diameter_AP)': 'AP Diameter',
     'MEAN(area)': 'Cross-Sectional Area',
     'MEAN(diameter_RL)': 'Transverse Diameter',
+    'MEAN(compression_ratio)': 'AP/RL Ratio',
     'MEAN(eccentricity)': 'Eccentricity',
     'MEAN(solidity)': 'Solidity',
 }
@@ -33,6 +34,7 @@ METRIC_TO_AXIS = {
     'MEAN(diameter_AP)': 'AP Diameter [mm]',
     'MEAN(area)': 'Cross-Sectional Area [mm²]',
     'MEAN(diameter_RL)': 'Transverse Diameter [mm]',
+    'MEAN(compression_ratio)': 'AP/RL Ratio [a.u.]',
     'MEAN(eccentricity)': 'Eccentricity [a.u.]',
     'MEAN(solidity)': 'Solidity [%]',
 }
@@ -50,6 +52,7 @@ METRICS_TO_YLIM_OFFSET = {
     'MEAN(area)': 6,
     'MEAN(diameter_RL)': 0.7,
     'MEAN(eccentricity)': 0.03,
+    'MEAN(compression_ratio)': 0.03,
     'MEAN(solidity)': 1,
 }
 
@@ -58,6 +61,7 @@ METRICS_TO_YLIM = {
     'MEAN(diameter_AP)': (4, 10), #(10, 20), #TODO: use second value for canal
     'MEAN(area)': (20, 95),  #(100, 270),
     'MEAN(diameter_RL)': (6, 14.5), #(15, 35),
+    'MEAN(compression_ratio)': (0.41, 0.84),
     'MEAN(eccentricity)': (0.51, 0.89),
     'MEAN(solidity)': (0.95, 0.99),
 }

@@ -125,10 +125,13 @@ def clean_data(df):
     """
     Clean the df:
     - Removes NaN values
+    - Computes AP/RL ratio
     - Binary index for sex
     - Index for site
     """
     clean = df.dropna(subset=["MEAN(area)", "age", ]).copy()
+    
+    clean["MEAN(compression_ratio)"] = clean["MEAN(diameter_AP)"] / clean["MEAN(diameter_RL)"]
 
     clean["sex_bin"] = (clean["sex"] == "F").astype(int)
 
