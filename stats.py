@@ -12,15 +12,7 @@ import numpy as np
 import pandas as pd
 import itertools
 from neuroCombat import neuroCombat
-
-METRICS = [
-"MEAN(area)",
-"MEAN(diameter_AP)",
-"MEAN(diameter_RL)",
-'MEAN(compression_ratio)',
-"MEAN(eccentricity)",
-"MEAN(solidity)"
-]
+from config.metrics import METRICS
 
 def combat_harmonization(df, metrics=METRICS, site_col="site_id"):
     """

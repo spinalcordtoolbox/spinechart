@@ -8,108 +8,8 @@ It creates interactive plots using Plotly for:
 
 import plotly.graph_objects as go
 import numpy as np
-
-
-METRICS = ['MEAN(area)', 'MEAN(diameter_AP)', 'MEAN(diameter_RL)', 'MEAN(compression_ratio)', 'MEAN(eccentricity)',
-           'MEAN(solidity)']
-
-METRICS_DTYPE = {
-    'MEAN(diameter_AP)': 'float64',
-    'MEAN(area)': 'float64',
-    'MEAN(diameter_RL)': 'float64',
-    'MEAN(eccentricity)': 'float64',
-    'MEAN(solidity)': 'float64',
-}
-
-METRIC_TO_TITLE = {
-    'MEAN(diameter_AP)': 'AP Diameter',
-    'MEAN(area)': 'Cross-Sectional Area',
-    'MEAN(diameter_RL)': 'Transverse Diameter',
-    'MEAN(compression_ratio)': 'AP/RL Ratio',
-    'MEAN(eccentricity)': 'Eccentricity',
-    'MEAN(solidity)': 'Solidity',
-}
-
-METRIC_TO_AXIS = {
-    'MEAN(diameter_AP)': 'AP Diameter [mm]',
-    'MEAN(area)': 'Cross-Sectional Area [mm²]',
-    'MEAN(diameter_RL)': 'Transverse Diameter [mm]',
-    'MEAN(compression_ratio)': 'AP/RL Ratio [a.u.]',
-    'MEAN(eccentricity)': 'Eccentricity [a.u.]',
-    'MEAN(solidity)': 'Solidity [%]',
-}
-
-DEMOGRAPHIC_TO_AXIS = {
-    'age': 'Age [years]',
-    'BMI': 'BMI [kg/m²]',
-    'height': 'Height [cm]',
-    'weight': 'Weight [kg]',
-}
-
-# ylim max offset (used for showing text)
-METRICS_TO_YLIM_OFFSET = {
-    'MEAN(diameter_AP)': 0.4,
-    'MEAN(area)': 6,
-    'MEAN(diameter_RL)': 0.7,
-    'MEAN(eccentricity)': 0.03,
-    'MEAN(compression_ratio)': 0.03,
-    'MEAN(solidity)': 1,
-}
-
-# Set ylim to do not overlap horizontal grid with vertebrae labels
-METRICS_TO_YLIM = {
-    'MEAN(diameter_AP)': (4, 10), #(10, 20), #TODO: use second value for canal
-    'MEAN(area)': (20, 95),  #(100, 270),
-    'MEAN(diameter_RL)': (6, 14.5), #(15, 35),
-    'MEAN(compression_ratio)': (0.41, 0.84),
-    'MEAN(eccentricity)': (0.51, 0.89),
-    'MEAN(solidity)': (95, 99.9),
-}
-
-DISCS_DICT = {
-    7: 'C7-T1',
-    6: 'C6-C7',
-    5: 'C5-C6',
-    4: 'C4-C5',
-    3: 'C3-C4',
-    2: 'C2-C3',
-    1: 'C1-C2'
-}
-
-MID_VERT_DICT = {
-    14: 'T7',
-    13: 'T6',
-    12: 'T5',
-    11: 'T4',
-    10: 'T3',
-    9: 'T2',
-    8: 'T1',
-    7: 'C7',
-    6: 'C6',
-    5: 'C5',
-    4: 'C4',
-    3: 'C3',
-    2: 'C2',
-    1: 'C1'
-}
-
-VENDORS = ['Siemens', 'Philips', 'GE']
-AGE_DECADES = ['10-20', '21-30', '31-40', '41-50', '51-60']
-
-LABELS_FONT_SIZE = 14
-TICKS_FONT_SIZE = 12
-
-COLORS_SEX = {
-    0: 'blue',
-    1: 'red'
-    }
-
-# To be same as spine-generic figures (https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L114)
-PALETTE = {
-    'sex': {'M': 'blue', 'F': 'red'},
-    'manufacturer': {'Siemens': 'green', 'Philips': 'dodgerblue', 'GE': 'black'},
-    'age': {'10-20': 'blue', '21-30': 'green', '31-40': 'black', '41-50': 'red', '51-60': 'purple'},
-    }
+from config.metrics import METRIC_CONFIG
+from config.plotting import COLORS_SEX
 
 
 def plot_age_profile(df, metric, level, sex):
@@ -127,6 +27,8 @@ def plot_age_profile(df, metric, level, sex):
 
 
     fig = go.Figure()
+    
+    cfg = METRIC_CONFIG[metric]
 
     # Add a trace for each sex
     for s in sex:
@@ -143,14 +45,13 @@ def plot_age_profile(df, metric, level, sex):
         ))
 
     fig.update_layout(
-        title=f"{METRIC_TO_TITLE[metric]} vs Age (Level {level})",
+        title=f"{cfg['title']} vs Age (Level {level})",
         xaxis_title="Age (years)",
-        yaxis_title=METRIC_TO_AXIS[metric]
+        yaxis_title=cfg['axis']
     )
     
     fig.update_yaxes(
-        range=METRICS_TO_YLIM[metric],
-        dtick=(METRICS_TO_YLIM[metric][1] - METRICS_TO_YLIM[metric][0]) / 5,
+        range=cfg['ylim'],
         showgrid=True
     )
 
@@ -168,6 +69,8 @@ def plot_spinal_profile(df, metric, age, sex):
 
 
     fig = go.Figure()
+    
+    cfg = METRIC_CONFIG[metric]
 
      # Add a trace for each sex
     for s in sex:
@@ -226,9 +129,9 @@ def plot_spinal_profile(df, metric, age, sex):
     
     # Add vertebral labels
     fig.update_layout(
-        title=f"{METRIC_TO_TITLE[metric]} vs Slice (Age {age[0]} to {age[1]})",
+        title=f"{cfg['title']} vs Slice (Age {age[0]} to {age[1]})",
         xaxis_title="Slice",
-        yaxis_title=METRIC_TO_AXIS[metric]
+        yaxis_title=cfg['axis']
     )
     
     fig.update_xaxes(
@@ -236,8 +139,8 @@ def plot_spinal_profile(df, metric, age, sex):
     )
     
     fig.update_yaxes(
-        range=METRICS_TO_YLIM[metric],
-        dtick=(METRICS_TO_YLIM[metric][1] - METRICS_TO_YLIM[metric][0]) / 5,
+        range=cfg['ylim'],
+        # dtick=(METRICS_TO_YLIM[metric][1] - METRICS_TO_YLIM[metric][0]) / 5,
         showgrid=True
     )
 
