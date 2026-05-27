@@ -26,8 +26,8 @@ METRIC_CONFIG = {
     },
 
     'MEAN(diameter_RL)': {
-        'title': 'Transverse Diameter',
-        'axis': 'Transverse Diameter [mm]',
+        'title': 'RL Diameter',
+        'axis': 'RL Diameter [mm]',
         'dtype': 'float64',
         'ylim': (6, 14.5),
         'ylim_offset': 0.7,
