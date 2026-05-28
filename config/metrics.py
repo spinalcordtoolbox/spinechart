@@ -15,6 +15,7 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (20, 95),
         'ylim_offset': 6,
+        'img': '/assets/thumbnails/csa.png',
     },
 
     'MEAN(diameter_AP)': {
@@ -23,6 +24,7 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (4, 10),
         'ylim_offset': 0.4,
+        'img': '/assets/thumbnails/ap_diameter.png',
     },
 
     'MEAN(diameter_RL)': {
@@ -31,6 +33,7 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (6, 14.5),
         'ylim_offset': 0.7,
+        'img': '/assets/thumbnails/rl_diameter.png',
     },
 
     'MEAN(compression_ratio)': {
@@ -39,6 +42,7 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (0.41, 0.84),
         'ylim_offset': 0.03,
+        'img': '/assets/thumbnails/compression_ratio.png',
     },
     
     'MEAN(eccentricity)': {
@@ -47,6 +51,7 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (0.51, 0.89),
         'ylim_offset': 0.03,
+        'img': '/assets/thumbnails/eccentricity.png',
     },
     
     'MEAN(solidity)': {
@@ -55,5 +60,6 @@ METRIC_CONFIG = {
         'dtype': 'float64',
         'ylim': (95, 99.9),
         'ylim_offset': 1,
+        'img': '/assets/thumbnails/solidity.png',
     },
 }
