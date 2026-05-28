@@ -37,6 +37,8 @@ def create_layout(df):
                     value=METRICS[0],
                     id="metric"
                 ),
+                
+                html.Div(id="metric-info-card"),
 
             ], style={
                 'width': '20%',
