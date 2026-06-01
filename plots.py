@@ -8,8 +8,10 @@ It creates interactive plots using Plotly for:
 
 import plotly.graph_objects as go
 import numpy as np
+import pandas as pd
 from config.metrics import METRIC_CONFIG
 from config.plotting import COLORS_SEX
+from config.demographics import SEX_MAP, AGE_DECADE_MAP
 
 
 def plot_age_profile(df, metric, level, sex):
@@ -140,10 +142,70 @@ def plot_spinal_profile(df, metric, age, sex):
     
     fig.update_yaxes(
         range=cfg['ylim'],
-        # dtick=(METRICS_TO_YLIM[metric][1] - METRICS_TO_YLIM[metric][0]) / 5,
         showgrid=True
     )
 
+    return fig
+
+
+def plot_heatmap(df, metric, sex):
+    if sex != "All":
+        dff = df[df["sex_bin"]==SEX_MAP[sex]].copy()
+    else:
+        dff = df.copy()
+        
+    bins = [10, 20, 30, 40, 50, 60]
+    labels =  list(AGE_DECADE_MAP.keys()) #AGE_DECADES #
+    
+    # Convert ages to groups of age ranges
+    dff["age_decade"] = pd.cut(
+        dff["age"],
+        bins=bins,
+        labels=labels,
+        include_lowest=True
+    )
+    
+    heatmap_df = (
+        dff.groupby(
+            ["age_decade", "Slice (I->S)"],
+            observed=False
+        )[metric]
+        .mean()
+        .reset_index()
+    )
+    
+    pivot = heatmap_df.pivot(
+        index="age_decade",
+        columns="Slice (I->S)",
+        values=metric
+    )
+
+    cfg = METRIC_CONFIG[metric]
+    
+    fig = go.Figure(
+        go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index,
+            colorscale="Viridis",
+            colorbar={"title": cfg["axis"]},
+            hovertemplate=(
+                "Age: %{y}<br>"
+                "Slice: %{x}<br>"
+                "Value: %{z:.2f}"
+                "<extra></extra>"
+                )
+        )
+    )
+    
+    fig.update_layout(
+        title=f"{cfg['title']} heatmap",
+        xaxis_title="Slice",
+        yaxis_title="Age decade"
+    )
+
+    fig.update_xaxes(autorange="reversed")
+    
     return fig
 
 
