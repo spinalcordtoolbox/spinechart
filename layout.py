@@ -50,6 +50,26 @@ def create_layout(df):
 
             # RIGHT
             html.Div([
+                
+                html.Div([
+
+                    html.H3("Heatmap"),
+
+                    html.Label("Sex"),
+
+                    dcc.RadioItems(
+                        options=["All", "Male", "Female"],
+                        value="All",
+                        id="sex-heatmap",
+                        inline=True
+                    ),
+
+                    dcc.Graph(id="heatmap")
+
+                ], style={
+                    'padding': '20px',
+                    'borderBottom': '1px solid #ccc'
+                }),
 
                 # AGE PLOT
                 html.Div([
