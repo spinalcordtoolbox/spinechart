@@ -14,6 +14,97 @@ from config.plotting import COLORS_SEX
 from config.demographics import SEX_MAP, AGE_DECADE_MAP
 
 
+def plot_heatmap(df, metric, sex):
+    if sex != "All":
+        dff = df[df["sex_bin"]==SEX_MAP[sex]].copy()
+    else:
+        dff = df.copy()
+        
+    bins = [10, 20, 30, 40, 50, 60]
+    labels =  list(AGE_DECADE_MAP.keys()) #AGE_DECADES #
+    
+    # Convert ages to groups of age ranges
+    dff["age_decade"] = pd.cut(
+        dff["age"],
+        bins=bins,
+        labels=labels,
+        include_lowest=True
+    )
+    
+    heatmap_df = (
+        dff.groupby(
+            ["age_decade", "Slice (I->S)"],
+            observed=False
+        )[metric]
+        .mean()
+        .reset_index()
+    )
+    
+    pivot = heatmap_df.pivot(
+        index="age_decade",
+        columns="Slice (I->S)",
+        values=metric
+    )
+
+    cfg = METRIC_CONFIG[metric]
+    
+    fig = go.Figure(
+        go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns,
+            y=pivot.index,
+            colorscale="Viridis",
+            colorbar={"title": cfg["axis"]},
+            hovertemplate=(
+                "Age: %{y}<br>"
+                "Slice: %{x}<br>"
+                "Value: %{z:.2f}"
+                "<extra></extra>"
+                )
+        )
+    )
+
+    fig.update_layout(
+        title=f"{cfg['title']} heatmap",
+        xaxis_title="Slice",
+        yaxis_title="Age decade",
+    )
+    
+    xmin = df["Slice (I->S)"].min()
+    xmax = df["Slice (I->S)"].max()
+    fig.update_xaxes(
+        range=[xmax, xmin],
+        linecolor="darkslategray",
+        )
+    
+    # Add vertebral boundary lines
+    ticks, mids, labels = get_vert_ticks(dff)
+    for t in ticks:
+
+        fig.add_vline(
+            x=t,
+            line_width=1,
+            line_dash="dot",
+            line_color="whitesmoke",
+            opacity=0.8
+        )
+        
+    # Vertebral labels annotations
+    for x, label in zip(mids, labels):
+
+        fig.add_annotation(
+            x=x,
+            y=0,
+            xref="x",
+            yref="paper",
+            text=label,
+            showarrow=False,
+            font=dict(size=12, color="whitesmoke")
+        )
+
+    return fig
+
+
 def plot_age_profile(df, metric, level, sex):
     # compute mean per age and sex
     dff = df[
@@ -69,12 +160,11 @@ def plot_spinal_profile(df, metric, age, sex):
         .sort_values("Slice (I->S)")
     )
 
-
     fig = go.Figure()
     
     cfg = METRIC_CONFIG[metric]
 
-     # Add a trace for each sex
+    # Add a trace for each sex
     for s in sex:
         dffs = dff_mean[dff_mean["sex_bin"] == s]
 
@@ -97,21 +187,9 @@ def plot_spinal_profile(df, metric, age, sex):
             x=t,
             line_width=1,
             line_dash="dot",
-            line_color="gray"
+            line_color="gray",
+            opacity=0.8
         )
-
-    # Horizontal separator bar
-    fig.add_shape(
-        type="line",
-        x0=0,
-        x1=1,
-        y0=0,
-        y1=0,
-        xref="paper",
-        yref="paper",
-        line=dict(color="black", width=1)
-    )
-
 
     # Vertebral labels annotations
     for x, label in zip(mids, labels):
@@ -121,90 +199,28 @@ def plot_spinal_profile(df, metric, age, sex):
             y=0,
             xref="x",
             yref="paper",
-
             text=label,
-
             showarrow=False,
-
-            font=dict(size=12, color="black")
+            font=dict(size=12, color="gray")
         )
     
-    # Add vertebral labels
     fig.update_layout(
         title=f"{cfg['title']} vs Slice (Age {age[0]} to {age[1]})",
         xaxis_title="Slice",
         yaxis_title=cfg['axis']
     )
     
+    xmin = df["Slice (I->S)"].min()
+    xmax = df["Slice (I->S)"].max()
     fig.update_xaxes(
-        autorange='reversed'
-    )
+        range=[xmax, xmin],
+        linecolor="darkslategray",
+        )
     
     fig.update_yaxes(
         range=cfg['ylim'],
         showgrid=True
     )
-
-    return fig
-
-
-def plot_heatmap(df, metric, sex):
-    if sex != "All":
-        dff = df[df["sex_bin"]==SEX_MAP[sex]].copy()
-    else:
-        dff = df.copy()
-        
-    bins = [10, 20, 30, 40, 50, 60]
-    labels =  list(AGE_DECADE_MAP.keys()) #AGE_DECADES #
-    
-    # Convert ages to groups of age ranges
-    dff["age_decade"] = pd.cut(
-        dff["age"],
-        bins=bins,
-        labels=labels,
-        include_lowest=True
-    )
-    
-    heatmap_df = (
-        dff.groupby(
-            ["age_decade", "Slice (I->S)"],
-            observed=False
-        )[metric]
-        .mean()
-        .reset_index()
-    )
-    
-    pivot = heatmap_df.pivot(
-        index="age_decade",
-        columns="Slice (I->S)",
-        values=metric
-    )
-
-    cfg = METRIC_CONFIG[metric]
-    
-    fig = go.Figure(
-        go.Heatmap(
-            z=pivot.values,
-            x=pivot.columns,
-            y=pivot.index,
-            colorscale="Viridis",
-            colorbar={"title": cfg["axis"]},
-            hovertemplate=(
-                "Age: %{y}<br>"
-                "Slice: %{x}<br>"
-                "Value: %{z:.2f}"
-                "<extra></extra>"
-                )
-        )
-    )
-    
-    fig.update_layout(
-        title=f"{cfg['title']} heatmap",
-        xaxis_title="Slice",
-        yaxis_title="Age decade"
-    )
-
-    fig.update_xaxes(autorange="reversed")
     
     return fig
 
@@ -254,5 +270,5 @@ def get_vert_ticks(df):
 
     # Convert numeric levels to labels
     vert_labels = [f"C{v}" if v<=7 else f"T{v-7}" for v in vert_levels]
-
-    return vert_starts, vert_mid, vert_labels
+    
+    return vert_starts[1:], vert_mid, vert_labels
