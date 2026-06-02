@@ -15,6 +15,8 @@ from config.demographics import SEX_MAP, AGE_DECADE_MAP
 
 def register_callbacks(app, df):
     
+    # HEATMAP
+    # Plotting the heatmap according to the chosen parameters
     @app.callback(
         Output("heatmap", "figure"),
         Input("metric", "value"),
@@ -24,6 +26,7 @@ def register_callbacks(app, df):
 
         return plot_heatmap(df, metric, sex)
     
+    # Linking the line charts param to those of the clicked heatmap cell
     @app.callback(
         Output("age", "value"),
         Output("level", "value"),
@@ -50,6 +53,23 @@ def register_callbacks(app, df):
 
         return age_range, level
     
+    # Linking the sex radio buttons to the sex checkboxes
+    @app.callback(
+        Output("sex-age", "value"),
+        Output("sex-spinal", "value"),
+        Input("sex-heatmap", "value"),
+    )
+    def update_sex(sex):
+        
+        if sex != "All":
+            value= [sex]
+        else:
+            value = ['Male', 'Female']
+        
+        return value, value
+    
+    # AGE PLOT
+    # Plotting the age profile according to the chosen parameters
     @app.callback(
         Output("age-plot", "figure"),
         Input("metric", "value"),
@@ -62,7 +82,8 @@ def register_callbacks(app, df):
 
         return plot_age_profile(df, metric, level, sex_codes)
 
-
+    # SPINAL PLOT
+    # Plotting the spinal profile according to the chosen parameters
     @app.callback(
         Output("spinal-plot", "figure"),
         Input("metric", "value"),
@@ -76,6 +97,7 @@ def register_callbacks(app, df):
         return plot_spinal_profile(df, metric, age, sex_codes)
     
     
+    # THUMBNAILS
     @app.callback(
         Output("metric-info-card", "children"),
         Input("metric", "value")
