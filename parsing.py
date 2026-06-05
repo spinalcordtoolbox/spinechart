@@ -117,11 +117,11 @@ def load_dataset(dataset_path):
     # Merge
     df_merged = df_all.merge(mdf, on="participant_id", how="left")
 
-    return df_merged
+    return df_merged, mdf
 
 
 
-def clean_data(df):
+def clean_data(metrics_df, dem_df):
     """
     Clean the df:
     - Removes NaN values
@@ -130,20 +130,23 @@ def clean_data(df):
     - Binary index for sex
     - Index for site
     """
-    clean = df.dropna(subset=["MEAN(area)", "age", ]).copy()
     
-    clean["MEAN(solidity)"] = clean["MEAN(solidity)"] * 100
-    
-    clean["MEAN(compression_ratio)"] = clean["MEAN(diameter_AP)"] / clean["MEAN(diameter_RL)"]
-
-    clean["sex_bin"] = (clean["sex"] == "F").astype(int)
-
+    # Data
+    clean_metrics = metrics_df.dropna(subset=["MEAN(area)", "age", ]).copy()
+    clean_metrics["MEAN(solidity)"] = clean_metrics["MEAN(solidity)"] * 100
+    clean_metrics["MEAN(compression_ratio)"] = clean_metrics["MEAN(diameter_AP)"] / clean_metrics["MEAN(diameter_RL)"]
+    clean_metrics["sex_bin"] = (clean_metrics["sex"] == "F").astype(int)
     # Site encoding
-    clean["site_id"] = (clean["institution"].astype("category").cat.codes)
+    clean_metrics["site_id"] = (clean_metrics["institution"].astype("category").cat.codes)
 
     # clean["vendor_id"] = (clean["manufacturer"].astype("category").cat.codes)
+    
+    # Meta data  
+    clean_dem = dem_df.copy()  
+    clean_dem["sex"] = clean_dem["sex"].fillna("Unspecified")
+    clean_dem["sex"] = clean_dem["sex"].replace({"M": "Male", "F": "Female"})
 
-    return clean
+    return clean_metrics, clean_dem
 
 
 
@@ -151,11 +154,18 @@ def run_parsing_pipeline():
     path = fetch_normative_database()
     datasets = find_datasets(path)
     
-    dfs = []
+    metrics_dfs = []
+    dem_dfs = []
+        
     for folder in datasets:
-        df = load_dataset(folder)
-        dfs.append(df)
+        data_df, meta_df = load_dataset(folder)
+        
+        metrics_dfs.append(data_df)
+        
+        meta_df["dataset_name"] = Path(folder).resolve().name
+        dem_dfs.append(meta_df)
 
-    df_all = pd.concat(dfs, ignore_index=True)
+    metrics_df_all = pd.concat(metrics_dfs, ignore_index=True)
+    dem_df_all = pd.concat(dem_dfs, ignore_index=True)
 
-    return clean_data(df_all)
+    return clean_data(metrics_df_all, dem_df_all)

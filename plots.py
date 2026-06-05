@@ -7,6 +7,7 @@ It creates interactive plots using Plotly for:
 
 
 import plotly.graph_objects as go
+import plotly.express as px
 import numpy as np
 import pandas as pd
 from config.metrics import METRIC_CONFIG
@@ -272,3 +273,40 @@ def get_vert_ticks(df):
     vert_labels = [f"C{v}" if v<=7 else f"T{v-7}" for v in vert_levels]
     
     return vert_starts[1:], vert_mid, vert_labels
+
+
+def plot_age_boxplot(df):
+    dff = (
+        df[["participant_id", "dataset_name", "sex", "age"]]
+        .dropna(subset=["age", "sex"])
+    )
+    # Order per age median
+    order = (
+        dff.groupby("dataset_name")["age"]
+        .median()
+        .sort_values()
+        .index
+    )
+    
+    fig = px.box(
+        dff,
+        x="dataset_name",
+        y="age",
+        color="sex",
+        category_orders={"dataset_name": list(order)},
+        labels={
+            "dataset_name": "Dataset",
+            "age": "Age (years)"
+        },
+        title="Age Distribution by Dataset"
+    )
+
+    fig.update_layout(
+        xaxis_title="Dataset",
+        yaxis_title="Age (years)",
+        xaxis_tickangle=-45,
+        showlegend=True,
+        legend_title_text="Sex"
+    )
+
+    return fig
