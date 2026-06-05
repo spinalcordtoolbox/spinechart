@@ -16,12 +16,12 @@ from callbacks import register_callbacks
 
 
 
-df = run_parsing_pipeline()
+metrics_df, dem_df = run_parsing_pipeline()
 
-norm_df = run_normative(df)
+norm_df = run_normative(metrics_df)
 
 app = Dash(__name__)
-app.layout = create_layout(norm_df)
+app.layout = create_layout(norm_df, dem_df)
 register_callbacks(app, norm_df)
 
 if __name__ == '__main__':
