@@ -52,29 +52,34 @@ def fetch_normative_database(repo_url=REPO_URL, local_path=DATA_ROOT):
 
 def find_datasets(root):
     """
-    Finds all dataset folders containing CSV + participants.tsv
+    Finds dataset folders containing CSV + participants.tsv
+    (Currently only )
     """
-    dataset_dir = (
-        root
-        / "spinal_cord"
-        / "spine-generic_multi-subject"
-    )
-
-    if not dataset_dir.exists():
-        raise ValueError(f"Dataset folder not found: {dataset_dir}")
-
-    required_files = [
-        dataset_dir / "participants.tsv",
-        dataset_dir / "dataset_description.json",
+    candidate_dir = [
+        root / "spinal_cord" / "spine-generic_multi-subject",
+        root / "spinal_cord" / "whole-spine",
     ]
+    
+    valid_datasets = []
+    
+    for dataset_dir in candidate_dir:
+        if not dataset_dir.exists():
+            raise ValueError(f"Dataset folder not found: {dataset_dir}")
 
-    has_required = all(f.exists() for f in required_files)
-    has_csv = any(dataset_dir.glob("*.csv"))
+        required_files = [
+            dataset_dir / "participants.tsv",
+            dataset_dir / "dataset_description.json",
+        ]
 
-    if not (has_required and has_csv):
-        raise ValueError(f"Invalid dataset structure in: {dataset_dir}")
+        has_required = all(f.exists() for f in required_files)
+        has_csv = any(dataset_dir.glob("*.csv"))
+        
+        if has_required and has_csv:
+            valid_datasets.append(dataset_dir)
+        else:
+            raise ValueError(f"Invalid dataset structure in: {dataset_dir}")
 
-    return [dataset_dir]
+    return valid_datasets
 
 
 
@@ -133,6 +138,7 @@ def clean_data(metrics_df, dem_df):
     
     # Data
     clean_metrics = metrics_df.dropna(subset=["MEAN(area)", "age", ]).copy()
+    clean_metrics["age"] = clean_metrics["age"].astype(int)
     clean_metrics["MEAN(solidity)"] = clean_metrics["MEAN(solidity)"] * 100
     clean_metrics["MEAN(compression_ratio)"] = clean_metrics["MEAN(diameter_AP)"] / clean_metrics["MEAN(diameter_RL)"]
     clean_metrics["sex_bin"] = (clean_metrics["sex"] == "F").astype(int)

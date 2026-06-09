@@ -13,6 +13,7 @@ import pandas as pd
 from config.metrics import METRIC_CONFIG
 from config.plotting import COLORS_SEX
 from config.demographics import SEX_MAP, AGE_DECADE_MAP
+from config.anatomy import VERT_DICT
 
 
 def plot_heatmap(df, metric, sex):
@@ -270,7 +271,7 @@ def get_vert_ticks(df):
         vert_mid.append(mid)
 
     # Convert numeric levels to labels
-    vert_labels = [f"C{v}" if v<=7 else f"T{v-7}" for v in vert_levels]
+    vert_labels = [VERT_DICT.get(v, str(v)) for v in vert_levels]
     
     return vert_starts[1:], vert_mid, vert_labels
 

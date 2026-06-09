@@ -8,7 +8,7 @@ It:
 
 from dash import dcc, html
 from config.metrics import METRICS, METRIC_CONFIG
-from config.anatomy import MID_VERT_DICT
+from config.anatomy import VERT_DICT
 from plots import plot_age_profile, plot_spinal_profile, plot_heatmap, plot_age_boxplot
 
 
@@ -90,7 +90,7 @@ def create_layout(metrics_df, dem_df):
                                     max=metrics_df["VertLevel"].max(),
                                     step=1,
                                     value=int(metrics_df["VertLevel"].median()),
-                                    marks=MID_VERT_DICT,
+                                    marks=VERT_DICT,
                                     id="level",
                                 ),
                                 className="simple-slider"
