@@ -24,125 +24,139 @@ def create_layout(metrics_df, dem_df):
 
         # Main layout
         html.Div([
-
-            # LEFT SIDE BAR
-            html.Div([
-
-                html.H3("Metric Selection"),
-
-                html.Label('Metric'),
-                dcc.Dropdown(
-                    options=[
-                        {"label": METRIC_CONFIG[m]["title"], "value": m} for m in METRICS
-                    ],
-                    value=METRICS[0],
-                    id="metric"
-                ),
-                
-                html.Div(id="metric-info-card"),
-
-            ], style={
-                'width': '20%',
-                'padding': '20px',
-                'borderRight': '1px solid #ccc',
-                'display': 'inline-block',
-                'verticalAlign': 'top'
-            }),
-                        
+                                    
             # RIGHT
             html.Div([
 
                 dcc.Tabs([
-
+                    
                     # NORMATIVE TAB
                     dcc.Tab(label="Normative Charts", children=[
 
-                        # HEATMAP
                         html.Div([
 
-                            html.H3("Heatmap"),
+                            # LEFT SIDE BAR
+                            html.Div([
 
-                            html.Label("Sex"),
+                                html.H3("Metric Selection"),
 
-                            dcc.RadioItems(
-                                options=["All", "Male", "Female"],
-                                value="All",
-                                id="sex-heatmap",
-                                inline=True
-                            ),
-
-                            dcc.Graph(id="heatmap")
-
-                        ], style={
-                            'padding': '20px',
-                            'borderBottom': '1px solid #ccc'
-                        }),
-
-                        # AGE PLOT
-                        html.Div([
-
-                            html.H3("Age Plot"),
-
-                            html.Label('Vertebral level'),
-                            html.Div(
-                                dcc.Slider(
-                                    min=metrics_df["VertLevel"].min(),
-                                    max=metrics_df["VertLevel"].max(),
-                                    step=1,
-                                    value=int(metrics_df["VertLevel"].median()),
-                                    marks=VERT_DICT,
-                                    id="level",
+                                html.Label('Metric'),
+                                dcc.Dropdown(
+                                    options=[
+                                        {"label": METRIC_CONFIG[m]["title"], "value": m}
+                                        for m in METRICS
+                                    ],
+                                    value=METRICS[0],
+                                    id="metric"
                                 ),
-                                className="simple-slider"
-                            ),
 
-                            html.Br(),
+                                html.Div(id="metric-info-card"),
 
-                            html.Label('Sex'),
-                            dcc.Checklist(
-                                ['Male', 'Female'],
-                                value=['Male', 'Female'],
-                                id="sex-age"
-                            ),
+                            ], style={
+                                'width': '20%',
+                                'padding': '20px',
+                                'borderRight': '1px solid #ccc',
+                                'verticalAlign': 'top'
+                            }),
 
-                            dcc.Graph(id="age-plot")
+                            # NORMATIVE CONTENT
+                            html.Div([
+
+                                # HEATMAP
+                                html.Div([
+
+                                    html.H3("Heatmap"),
+
+                                    html.Label("Sex"),
+
+                                    dcc.RadioItems(
+                                        options=["All", "Male", "Female"],
+                                        value="All",
+                                        id="sex-heatmap",
+                                        inline=True
+                                    ),
+
+                                    dcc.Graph(id="heatmap")
+
+                                ], style={
+                                    'padding': '20px',
+                                    'borderBottom': '1px solid #ccc'
+                                }),
+
+                                # AGE PLOT
+                                html.Div([
+
+                                    html.H3("Age Plot"),
+
+                                    html.Label('Vertebral level'),
+                                    html.Div(
+                                        dcc.Slider(
+                                            min=metrics_df["VertLevel"].min(),
+                                            max=metrics_df["VertLevel"].max(),
+                                            step=1,
+                                            value=int(metrics_df["VertLevel"].median()),
+                                            marks=VERT_DICT,
+                                            id="level",
+                                        ),
+                                        className="simple-slider"
+                                    ),
+
+                                    html.Br(),
+
+                                    html.Label('Sex'),
+                                    dcc.Checklist(
+                                        ['Male', 'Female'],
+                                        value=['Male', 'Female'],
+                                        id="sex-age"
+                                    ),
+
+                                    dcc.Graph(id="age-plot")
+
+                                ], style={
+                                    'padding': '20px',
+                                    'borderBottom': '1px solid #ccc'
+                                }),
+
+                                # SPINAL PLOT
+                                html.Div([
+
+                                    html.H3("Spinal Plot"),
+
+                                    html.Label('Age'),
+                                    dcc.RangeSlider(
+                                        min=metrics_df["age"].min(),
+                                        max=metrics_df["age"].max(),
+                                        step=1,
+                                        value=[
+                                            int(metrics_df["age"].median()),
+                                            int(metrics_df["age"].median()) + 1
+                                        ],
+                                        id="age"
+                                    ),
+
+                                    html.Br(),
+
+                                    html.Label('Sex'),
+                                    dcc.Checklist(
+                                        ['Male', 'Female'],
+                                        value=['Male', 'Female'],
+                                        id="sex-spinal"
+                                    ),
+
+                                    dcc.Graph(id="spinal-plot")
+
+                                ], style={
+                                    'padding': '20px'
+                                }),
+
+                            ], style={
+                                'width': '80%',
+                                'verticalAlign': 'top'
+                            })
 
                         ], style={
-                            'padding': '20px',
-                            'borderBottom': '1px solid #ccc'
-                        }),
-
-                        # SPINAL PLOT
-                        html.Div([
-
-                            html.H3("Spinal Plot"),
-
-                            html.Label('Age'),
-                            dcc.RangeSlider(
-                                min=metrics_df["age"].min(),
-                                max=metrics_df["age"].max(),
-                                step=1,
-                                value=[
-                                    int(metrics_df["age"].median()),
-                                    int(metrics_df["age"].median()) + 1
-                                ],
-                                id="age"
-                            ),
-
-                            html.Br(),
-
-                            html.Label('Sex'),
-                            dcc.Checklist(
-                                ['Male', 'Female'],
-                                value=['Male', 'Female'],
-                                id="sex-spinal"
-                            ),
-
-                            dcc.Graph(id="spinal-plot")
-
-                        ], style={
-                            'padding': '20px'
-                        }),
+                            'display': 'flex'
+                        })
 
                     ]),
 
@@ -165,14 +179,8 @@ def create_layout(metrics_df, dem_df):
 
                 ])
 
-            ], style={
-                'width': '78%',
-                'display': 'inline-block',
-                'verticalAlign': 'top'
-            })
+            ])
             
-    ], style={
-        'display': 'flex'
-    })
+        ])
 
-])
+    ])
