@@ -11,7 +11,7 @@ import dash_ag_grid as dag
 
 from config.metrics import METRICS, METRIC_CONFIG
 from config.anatomy import VERT_DICT
-from plots import plot_age_profile, plot_spinal_profile, plot_heatmap, plot_age_boxplot
+from plots import plot_age_profile, plot_spinal_profile, plot_heatmap, plot_age_raincloud
 from stats import summary_dataset, summary_pathology
 
 
@@ -174,7 +174,7 @@ def create_layout(metrics_df, dem_df):
                             html.H3("Age Distribution by Dataset"),
 
                             dcc.Graph(
-                                figure=plot_age_boxplot(dem_df),                        
+                                figure=plot_age_raincloud(dem_df),                        
                                 id="age-boxplot",
                                 style={"height": "600px"}
                             )

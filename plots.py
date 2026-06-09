@@ -8,6 +8,8 @@ It creates interactive plots using Plotly for:
 
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
+
 import numpy as np
 import pandas as pd
 from config.metrics import METRIC_CONFIG
@@ -276,38 +278,119 @@ def get_vert_ticks(df):
     return vert_starts[1:], vert_mid, vert_labels
 
 
-def plot_age_boxplot(df):
+def plot_age_raincloud(df):
     dff = (
         df[["participant_id", "dataset_name", "sex", "age"]]
         .dropna(subset=["age", "sex"])
     )
-    # Order per age median
-    order = (
+
+    # Dataset ordering
+    dataset_order = (
         dff.groupby("dataset_name")["age"]
         .median()
         .sort_values()
         .index
-    )
-    
-    fig = px.box(
-        dff,
-        x="dataset_name",
-        y="age",
-        color="sex",
-        category_orders={"dataset_name": list(order)},
-        labels={
-            "dataset_name": "Dataset",
-            "age": "Age (years)"
-        },
-        title="Age Distribution by Dataset"
+        .tolist()
     )
 
+    sexes = sorted(dff["sex"].unique())
+
+    # Colors per sex
+    colors = {
+        sex: f"hsl({i * 360 / len(sexes)}, 60%, 55%)"
+        for i, sex in enumerate(sexes)
+    }
+
+    # Spacing between sexes
+    sex_offsets = {
+        sex: (i - (len(sexes) - 1) / 2) * 0.35
+        for i, sex in enumerate(sexes)
+    }
+    
+    fig = go.Figure()
+
+    jitter_strength = 0.12
+
+    for i, dataset in enumerate(dataset_order):
+        subset = dff[dff["dataset_name"] == dataset]
+
+        for sex in sexes:
+            sub = subset[subset["sex"] == sex]
+            if sub.empty:
+                continue
+            
+            # Applying offset
+            x_base = i + sex_offsets[sex]
+            
+            # Tooltip
+            customdata = np.stack([
+                np.repeat(dataset, len(sub)),
+                np.repeat(sex, len(sub))
+            ], axis=-1)
+            
+            hovertemplate = "Dataset: %{customdata[0]}<br>" + "Sex: %{customdata[1]}<br>" + "Age: %{y}<extra></extra>"
+
+
+            # Half-violin
+            fig.add_trace(go.Violin(
+                x=[x_base] * len(sub),
+                y=sub["age"],
+                side="positive",
+                customdata=customdata,
+                hovertemplate=hovertemplate,
+                hoverlabel=dict(namelength=0),
+                line_color="black",
+                fillcolor=colors[sex],
+                opacity=0.6,
+                points=False,
+                spanmode="hard",
+                width=0.6,
+                name=sex,
+                legendgroup=sex,
+                showlegend=(i == 0)
+            ))
+
+            # Box plot
+            fig.add_trace(go.Box(
+                x=[x_base] * len(sub),
+                y=sub["age"],
+                customdata=customdata,
+                hovertemplate=hovertemplate,
+                hoverlabel=dict(namelength=0),
+                marker=dict(color="black", opacity=0.4),
+                width=0.15,
+                boxpoints=False,
+                legendgroup=sex,
+                showlegend=False
+            ))
+
+            # Jitter plot
+            x_jittered = (
+                np.random.uniform(-jitter_strength, jitter_strength, len(sub))
+                + x_base
+            )
+
+            fig.add_trace(go.Scatter(
+                x=x_jittered,
+                y=sub["age"],
+                customdata=customdata,
+                hovertemplate=hovertemplate,
+                mode="markers",
+                marker=dict(color=colors[sex], size=5, opacity=0.4),
+                legendgroup=sex,
+                showlegend=False
+            ))
+
     fig.update_layout(
-        xaxis_title="Dataset",
+        title="Age Raincloud Plot by Dataset and Sex",
+        xaxis=dict(
+            tickmode="array",
+            tickvals=list(range(len(dataset_order))),
+            ticktext=dataset_order,
+            title="Dataset"
+        ),
         yaxis_title="Age (years)",
-        xaxis_tickangle=-45,
-        showlegend=True,
-        legend_title_text="Sex"
+        showlegend=True
     )
 
     return fig
