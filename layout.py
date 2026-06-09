@@ -7,12 +7,18 @@ It:
 """
 
 from dash import dcc, html
+import dash_ag_grid as dag
+
 from config.metrics import METRICS, METRIC_CONFIG
 from config.anatomy import VERT_DICT
 from plots import plot_age_profile, plot_spinal_profile, plot_heatmap, plot_age_boxplot
+from stats import summary_dataset, summary_pathology
 
 
 def create_layout(metrics_df, dem_df):
+    # Retrieve summary stats
+    dataset_summary = summary_dataset(dem_df)
+    pathology_summary = summary_pathology(dem_df)
 
     return html.Div([
 
@@ -174,6 +180,77 @@ def create_layout(metrics_df, dem_df):
                             )
 
                         ], style={'padding': '20px'}),
+                        
+                        html.Br(),
+                        
+                        html.Div([
+
+                            # Dataset overview
+                            html.Div([
+
+                                html.H3("Dataset Overview"),
+
+                                dag.AgGrid(
+                                    rowData=dataset_summary.to_dict("records"),
+                                    columnDefs=[
+                                        {"field": "dataset_name", "headerName": "Dataset"},
+                                        {"field": "N", "headerName": "N"},
+                                        {"field": "Mean_Age", "headerName": "Mean Age"},
+                                        {"field": "STD_Age", "headerName": "STD"},
+                                        {"field": "Min_Age", "headerName": "Min"},
+                                        {"field": "Max_Age", "headerName": "Max"},
+                                    ],
+                                    defaultColDef={
+                                        "sortable": True,
+                                        "filter": True,
+                                        "resizable": True,
+                                    },
+                                    columnSize="sizeToFit",
+                                    dashGridOptions={"pagination": False},
+                                    style={"height": "250px"},
+                                ),
+
+                            ], style={
+                                "width": "49%",
+                            }),
+                            
+                            # Pathology overview
+                            html.Div([
+
+                                html.H3("Pathology Overview"),
+
+                                dag.AgGrid(
+                                    rowData=pathology_summary.to_dict("records"),
+                                    columnDefs=[
+                                        {"field": "pathology", "headerName": "Pathology"},
+                                        {"field": "N", "headerName": "N"},
+                                        {"field": "Mean_Age", "headerName": "Mean Age"},
+                                        {"field": "STD_Age", "headerName": "STD"},
+                                        {"field": "Min_Age", "headerName": "Min"},
+                                        {"field": "Max_Age", "headerName": "Max"},
+                                    ],
+                                    defaultColDef={
+                                        "sortable": True,
+                                        "filter": True,
+                                        "resizable": True,
+                                    },
+                                    columnSize="sizeToFit",
+                                    dashGridOptions={"pagination": False},
+                                    style={"height": "250px"},
+                                ),
+
+                            ], style={
+                                "width": "49%",
+                            }),
+
+                        ], style={
+                            "display": "flex",
+                            "justifyContent": "space-between",
+                            "gap": "20px",
+                            "marginBottom": "30px",
+                        })
+
+                        
 
                     ])
 
