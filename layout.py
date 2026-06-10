@@ -22,12 +22,16 @@ def create_layout(metrics_df, dem_df):
     pathology_summary = summary_pathology(dem_df)
 
     return html.Div([
+        
+        html.Br(),
 
         # Title
         html.H1(
             children="Spinal Cord Normative Chart",
             style={'textAlign': 'center'}
         ),
+        
+        html.Br(),
 
         # Main layout
         html.Div([
@@ -332,6 +336,8 @@ def create_layout(metrics_df, dem_df):
                             "justifyContent": "space-between",
                             "gap": "20px",
                             "marginBottom": "30px",
+                            "marginLeft": "30px",
+                            "marginRight": "30px",
                         })
 
                         
