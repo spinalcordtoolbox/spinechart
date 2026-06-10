@@ -8,6 +8,7 @@ It:
 
 from dash import dcc, html
 import dash_ag_grid as dag
+import dash_bootstrap_components as dbc
 
 from config.metrics import METRICS, METRIC_CONFIG
 from config.anatomy import VERT_DICT
@@ -70,8 +71,35 @@ def create_layout(metrics_df, dem_df):
 
                                 # HEATMAP
                                 html.Div([
-
-                                    html.H3("Heatmap"),
+                                    
+                                    html.Div([
+                                        html.H3(
+                                            "Heatmap",
+                                            style={"margin": 0}
+                                        ),
+                                        
+                                        html.I(
+                                            className="bi bi-info-circle-fill",
+                                            id="tooltip-heatmap",
+                                            style={
+                                                "cursor": "pointer",
+                                                "marginLeft": "8px",
+                                                "color": "#0d6efd",
+                                            },
+                                        )
+                                    ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                        }),
+                                    
+                                    dbc.Tooltip(
+                                            "This heatmap displays model-predicted values"
+                                            " of the selected metric across age and vertebral levels."
+                                            " Color intensity represents the metric value.",
+                                            target="tooltip-heatmap",
+                                            placement='right',
+                                            style={"maxWidth": "250px"}
+                                    ),                                    
 
                                     html.Label("Sex"),
 
@@ -91,8 +119,35 @@ def create_layout(metrics_df, dem_df):
 
                                 # AGE PLOT
                                 html.Div([
-
-                                    html.H3("Age Plot"),
+                                    
+                                    html.Div([
+                                        html.H3(
+                                            "Age Plot",
+                                            style={"margin": 0}
+                                        ),
+                                        
+                                        html.I(
+                                            className="bi bi-info-circle-fill",
+                                            id="tooltip-age",
+                                            style={
+                                                "cursor": "pointer",
+                                                "marginLeft": "8px",
+                                                "color": "#0d6efd",
+                                            },
+                                        )
+                                    ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                        }),
+                                    
+                                    dbc.Tooltip(
+                                            "This line chart displays model-predicted values"
+                                            " of the selected metric across age,"
+                                            " highlighting changes over the lifespan.",
+                                            target="tooltip-age",
+                                            placement='right',
+                                            style={"maxWidth": "250px"}
+                                        ),  
 
                                     html.Label('Vertebral level'),
                                     html.Div(
@@ -125,8 +180,37 @@ def create_layout(metrics_df, dem_df):
 
                                 # SPINAL PLOT
                                 html.Div([
+                                    
+                                    html.Div([
+                                        html.H3(
+                                            "Spinal Plot",
+                                            style={"margin": 0}
+                                        ),
+                                        
+                                        html.I(
+                                            className="bi bi-info-circle-fill",
+                                            id="tooltip-spinal",
+                                            style={
+                                                "cursor": "pointer",
+                                                "marginLeft": "8px",
+                                                "color": "#0d6efd",
+                                            },
+                                        )
+                                    ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                        }),
+                                    
+                                    dbc.Tooltip(
+                                            "This line chart displays model-predicted values"
+                                            " of the selected metric across vertebral levels,"
+                                            " highlighting spatial variations along the spinal cord.",
+                                            target="tooltip-spinal",
+                                            placement='right',
+                                            style={"maxWidth": "250px"}
+                                    ),  
 
-                                    html.H3("Spinal Plot"),
+                                    # html.H3("Spinal Plot"),
 
                                     html.Label('Age'),
                                     dcc.RangeSlider(

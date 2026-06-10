@@ -8,6 +8,7 @@ It:
 """
 
 from dash import Dash
+import dash_bootstrap_components as dbc
 
 from parsing import run_parsing_pipeline
 from stats import run_normative
@@ -20,7 +21,10 @@ metrics_df, dem_df = run_parsing_pipeline()
 
 norm_df = run_normative(metrics_df)
 
-app = Dash(__name__)
+app = Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
+    )
 app.layout = create_layout(norm_df, dem_df)
 register_callbacks(app, norm_df)
 
