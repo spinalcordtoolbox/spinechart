@@ -26,7 +26,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
     )
 app.layout = create_layout(norm_df, dem_df)
-register_callbacks(app, norm_df)
+register_callbacks(app, norm_df, metrics_df)
 
 if __name__ == '__main__':
     app.run(debug=True)
