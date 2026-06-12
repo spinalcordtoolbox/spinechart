@@ -21,10 +21,10 @@ def compute_n(metrics_df, level=None, age=None, sex_codes=None, mode="global"):
         level (int, optional): Vertebral level of the subgroup. Defaults to None.
         age (list, optional): Age range of the subgroup. Defaults to None.
         sex_codes (list, optional): Sex of the subgroup. Defaults to None.
-        mode (str, optional): Plot catered (age_profile, spinal_profile, global). Defaults to "global".
+        mode (str, optional): Targeted plot (age_profile, spinal_profile, global). Defaults to "global".
 
     Returns:
-        _type_: _description_
+        int: size of the subgroup
     """
     df = metrics_df.copy()
 
