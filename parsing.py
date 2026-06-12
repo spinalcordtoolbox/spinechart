@@ -148,8 +148,7 @@ def clean_data(metrics_df, dem_df):
     # clean["vendor_id"] = (clean["manufacturer"].astype("category").cat.codes)
     
     # Meta data  
-    clean_dem = dem_df.copy()  
-    clean_dem["sex"] = clean_dem["sex"].fillna("Unspecified")
+    clean_dem = dem_df.dropna(subset=["sex", ]).copy()
     clean_dem["sex"] = clean_dem["sex"].replace({"M": "Male", "F": "Female"})
 
     return clean_metrics, clean_dem
