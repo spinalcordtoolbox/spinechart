@@ -214,8 +214,6 @@ def create_layout(metrics_df, dem_df):
                                             style={"maxWidth": "250px"}
                                     ),  
 
-                                    # html.H3("Spinal Plot"),
-
                                     html.Label('Age'),
                                     dcc.RangeSlider(
                                         min=metrics_df["age"].min(),
@@ -258,8 +256,34 @@ def create_layout(metrics_df, dem_df):
                     dcc.Tab(label="Demographics", children=[
 
                         html.Div([
-
-                            html.H3("Age Distribution by Dataset"),
+                            
+                            html.Div([
+                                        html.H3(
+                                            "Age Distribution by Dataset",
+                                            style={"margin": 0}
+                                        ),
+                                        
+                                        html.I(
+                                            className="bi bi-info-circle-fill",
+                                            id="tooltip-raincloud",
+                                            style={
+                                                "cursor": "pointer",
+                                                "marginLeft": "8px",
+                                                "color": "#0d6efd",
+                                            },
+                                        )
+                                    ], style={
+                                            "display": "flex",
+                                            "alignItems": "center",
+                                        }),
+                            
+                            dbc.Tooltip(
+                                            "This raincloud plot displays age distribution of subjects"
+                                            " across dataset, stratified by sex.",
+                                            target="tooltip-raincloud",
+                                            placement='right',
+                                            style={"maxWidth": "250px"}
+                                    ), 
 
                             dcc.Graph(
                                 figure=plot_age_raincloud(dem_df),                        
