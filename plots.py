@@ -142,7 +142,7 @@ def plot_age_profile(df, metric, level, sex):
         ))
 
     fig.update_layout(
-        title=f"{cfg['title']} vs Age (Level {level})",
+        title=f"{cfg['title']} vs Age (Level {VERT_DICT[level]})",
         xaxis_title="Age (years)",
         yaxis_title=cfg['axis']
     )
