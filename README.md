@@ -29,7 +29,7 @@ spinechart\Scripts\activate # Windows
 ```
 4. Install the requirements
 ```bash
-pip -r requirements.txt
+pip install -r requirements.txt
 ```
 ## Usage
 To run the dahsboard
