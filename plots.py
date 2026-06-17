@@ -404,21 +404,32 @@ def plot_age_raincloud(df):
             x_base = i + sex_offsets[sex]
             
             # Tooltip
+            n = (
+                sub.groupby("age")["participant_id"]
+                .nunique()
+                .rename("N")
+                .reset_index()
+            )
+            sub = sub.merge(n, on="age", how="left")
             customdata = np.stack([
-                np.repeat(dataset, len(sub)),
-                np.repeat(sex, len(sub))
+                sub["dataset_name"],
+                sub["sex"],
+                sub["N"]
             ], axis=-1)
             
-            hovertemplate = "Dataset: %{customdata[0]}<br>" + "Sex: %{customdata[1]}<br>" + "Age: %{y}<extra></extra>"
-
-
+            hovertemplate_jitter = (
+                "Dataset: %{customdata[0]}<br>"
+                "Sex: %{customdata[1]}<br>"
+                "Age: %{y}<br>"
+                "N:  %{customdata[2]}<extra></extra>"
+                )
+            
             # Half-violin
             fig.add_trace(go.Violin(
                 x=[x_base] * len(sub),
                 y=sub["age"],
                 side="positive",
                 customdata=customdata,
-                hovertemplate=hovertemplate,
                 hoverlabel=dict(namelength=0),
                 line_color="black",
                 fillcolor=colors[sex],
@@ -436,7 +447,6 @@ def plot_age_raincloud(df):
                 x=[x_base] * len(sub),
                 y=sub["age"],
                 customdata=customdata,
-                hovertemplate=hovertemplate,
                 hoverlabel=dict(namelength=0),
                 marker=dict(color="black", opacity=0.4),
                 width=0.15,
@@ -455,7 +465,7 @@ def plot_age_raincloud(df):
                 x=x_jittered,
                 y=sub["age"],
                 customdata=customdata,
-                hovertemplate=hovertemplate,
+                hovertemplate=hovertemplate_jitter,
                 mode="markers",
                 marker=dict(color=colors[sex], size=5, opacity=0.4),
                 legendgroup=sex,
