@@ -18,11 +18,13 @@ from config.demographics import SEX_MAP, AGE_DECADE_MAP
 from config.anatomy import VERT_DICT
 
 
-def plot_heatmap(df, metric, sex):
+def plot_heatmap(df, raw_metrics_df, metric, sex):
     if sex != "All":
         dff = df[df["sex_bin"]==SEX_MAP[sex]].copy()
+        dff_raw = raw_metrics_df[raw_metrics_df["sex_bin"]==SEX_MAP[sex]].copy()
     else:
         dff = df.copy()
+        dff_raw = raw_metrics_df.copy()
         
     bins = [10, 20, 30, 40, 50, 60]
     labels =  list(AGE_DECADE_MAP.keys()) #AGE_DECADES #
@@ -49,6 +51,36 @@ def plot_heatmap(df, metric, sex):
         columns="Slice (I->S)",
         values=metric
     )
+    
+    
+    # compute subgroup size
+    dff_raw["age_decade"] = pd.cut(
+        dff_raw["age"],
+        bins=bins,
+        labels=labels,
+        include_lowest=True
+    )
+    
+    dff_n = (
+        dff_raw.groupby(
+            ["age_decade", "Slice (I->S)"],
+            observed=False
+        )["participant_id"]
+        .nunique()
+        .reset_index(name="N")
+    )
+
+    pivot_n = dff_n.pivot(
+        index="age_decade",
+        columns="Slice (I->S)",
+        values="N"
+    )
+
+    # Align N matrix to metric matrix
+    pivot_n = pivot_n.reindex(
+        index=pivot.index,
+        columns=pivot.columns
+    )
 
     cfg = METRIC_CONFIG[metric]
     
@@ -59,10 +91,12 @@ def plot_heatmap(df, metric, sex):
             y=pivot.index,
             colorscale="Viridis",
             colorbar={"title": cfg["axis"]},
+            customdata=pivot_n.values[..., np.newaxis],
             hovertemplate=(
                 "Age: %{y}<br>"
                 "Slice: %{x}<br>"
-                "Value: %{z:.2f}"
+                "Value: %{z:.2f}<br>"
+                "N: %{customdata[0]:.0f}"
                 "<extra></extra>"
                 )
         )
@@ -109,18 +143,36 @@ def plot_heatmap(df, metric, sex):
     return fig
 
 
-def plot_age_profile(df, metric, level, sex):
+def plot_age_profile(df, raw_metrics_df, metric, level, sex):
     # compute mean per age and sex
     dff = df[
         (df["VertLevel"]==level)
         & (df["sex_bin"].isin(sex))
     ]
-
     dff_mean = (
         dff.groupby(["age", "sex_bin"], as_index=False)[metric]
         .mean()
         .sort_values("age")
     )
+    
+    # compute subgroup size
+    dff_raw = raw_metrics_df[
+        (raw_metrics_df["VertLevel"]==level)
+        & (raw_metrics_df["sex_bin"].isin(sex))
+    ]
+    dff_n = (
+        dff_raw.groupby(["age", "sex_bin"])["participant_id"]
+        .nunique()
+        .reset_index(name="N")
+    )
+    
+    # Merge mean and subgroup size df
+    dff_plot = dff_mean.merge(
+        dff_n,
+        on=["age", "sex_bin"],
+        how="left"
+    )
+    dff_plot["N"] = dff_plot["N"].fillna(0).astype(int)
 
 
     fig = go.Figure()
@@ -129,7 +181,7 @@ def plot_age_profile(df, metric, level, sex):
 
     # Add a trace for each sex
     for s in sex:
-        dffs = dff_mean[dff_mean["sex_bin"] == s]
+        dffs = dff_plot[dff_plot["sex_bin"] == s]
         label = "Male" if s == 0 else "Female"
 
         fig.add_trace(go.Scatter(
@@ -138,11 +190,17 @@ def plot_age_profile(df, metric, level, sex):
             mode="lines",
             name=label,
             line=dict(width=3, color=COLORS_SEX[s]),
-            hovertemplate='Age : %{x}, Mean : %{y:.2f} <extra></extra>'
+            customdata=dffs[["N"]],
+            hovertemplate=(
+                "Age: %{x}<br>"
+                "Mean: %{y:.2f}<br>"
+                "N: %{customdata[0]}"
+                "<extra></extra>"
+            )
         ))
 
     fig.update_layout(
-        title=f"{cfg['title']} vs Age (Level {level})",
+        title=f"{cfg['title']} vs Age ({VERT_DICT[level]})",
         xaxis_title="Age (years)",
         yaxis_title=cfg['axis']
     )
@@ -155,7 +213,7 @@ def plot_age_profile(df, metric, level, sex):
     return fig
 
 
-def plot_spinal_profile(df, metric, age, sex):
+def plot_spinal_profile(df, raw_metrics_df, metric, age, sex):
     # compute mean per slice and sex
     dff = df[(df["age"].between(age[0], age[1])) & df["sex_bin"].isin(sex)]
     dff_mean = (
@@ -163,6 +221,23 @@ def plot_spinal_profile(df, metric, age, sex):
         .mean()
         .sort_values("Slice (I->S)")
     )
+    
+    # compute subgroup size
+    dff_raw = raw_metrics_df[(raw_metrics_df["age"].between(age[0], age[1])) & raw_metrics_df["sex_bin"].isin(sex)]
+    dff_n = (
+        dff_raw.groupby(["Slice (I->S)", "sex_bin"])["participant_id"]
+        .nunique()
+        .reset_index(name="N")
+    )
+    
+    # Merge mean and subgroup size df
+    dff_plot = dff_mean.merge(
+        dff_n,
+        on=["Slice (I->S)", "sex_bin"],
+        how="left"
+    )
+    dff_plot["N"] = dff_plot["N"].fillna(0).astype(int)
+    
 
     fig = go.Figure()
     
@@ -170,7 +245,7 @@ def plot_spinal_profile(df, metric, age, sex):
 
     # Add a trace for each sex
     for s in sex:
-        dffs = dff_mean[dff_mean["sex_bin"] == s]
+        dffs = dff_plot[dff_plot["sex_bin"] == s]
 
         label = "Male" if s == 0 else "Female"
 
@@ -180,7 +255,13 @@ def plot_spinal_profile(df, metric, age, sex):
             name=label,
             mode="lines",
             line=dict(width=3, color=COLORS_SEX[s]),
-            hovertemplate='Slice : %{x}, Mean : %{y:.2f} <extra></extra>'
+            customdata=dffs[["N"]],
+            hovertemplate=(
+                "Age: %{x}<br>"
+                "Mean: %{y:.2f}<br>"
+                "N: %{customdata[0]}"
+                "<extra></extra>"
+            )
         ))
         
     # Add vertebral boundary lines
