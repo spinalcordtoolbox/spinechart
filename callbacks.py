@@ -13,7 +13,7 @@ from plots import plot_age_profile, plot_spinal_profile, plot_heatmap
 from config.metrics import METRIC_CONFIG
 from config.demographics import SEX_MAP, AGE_DECADE_MAP
 
-def compute_n(metrics_df, level=None, age=None, sex_codes=None, mode="global"):
+def compute_n(raw_metrics_df, level=None, age=None, sex_codes=None, mode="global"):
     """Callback helper to compute the number of participants in the raw dataset corresponding to the selected subgroup
 
     Args:
@@ -26,7 +26,7 @@ def compute_n(metrics_df, level=None, age=None, sex_codes=None, mode="global"):
     Returns:
         int: size of the subgroup
     """
-    df = metrics_df.copy()
+    df = raw_metrics_df.copy()
 
     if sex_codes is not None:
         df = df[df["sex_bin"].isin(sex_codes)]
@@ -40,7 +40,7 @@ def compute_n(metrics_df, level=None, age=None, sex_codes=None, mode="global"):
     return df["participant_id"].nunique()
 
 
-def register_callbacks(app, norm_df, metrics_df):
+def register_callbacks(app, norm_df, raw_metrics_df):
     
     # HEATMAP
     # Plotting the heatmap according to the chosen parameters
@@ -51,12 +51,12 @@ def register_callbacks(app, norm_df, metrics_df):
     )
     def update_heatmap(metric, sex):
         
-        fig = plot_heatmap(norm_df, metric, sex)
+        fig = plot_heatmap(norm_df, raw_metrics_df, metric, sex)
 
         sex_codes = [SEX_MAP[sex]] if sex != "All" else [0, 1]
 
         n = compute_n(
-            metrics_df,
+            raw_metrics_df,
             sex_codes=sex_codes,
             mode="global"
         )
@@ -121,10 +121,10 @@ def register_callbacks(app, norm_df, metrics_df):
 
         sex_codes = [SEX_MAP[s] for s in sex]
         
-        fig = plot_age_profile(norm_df, metric, level, sex_codes)
+        fig = plot_age_profile(norm_df, raw_metrics_df, metric, level, sex_codes)
         
         n = compute_n(
-            metrics_df,
+            raw_metrics_df,
             level=level,
             sex_codes=sex_codes,
             mode="age_profile"
@@ -148,10 +148,10 @@ def register_callbacks(app, norm_df, metrics_df):
 
         sex_codes = [SEX_MAP[s] for s in sex]
         
-        fig = plot_spinal_profile(norm_df, metric, age, sex_codes)
+        fig = plot_spinal_profile(norm_df, raw_metrics_df, metric, age, sex_codes)
         
         n = compute_n(
-            metrics_df,
+            raw_metrics_df,
             age=age,
             sex_codes=sex_codes,
             mode="spinal_profile"
