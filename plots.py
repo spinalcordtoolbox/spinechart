@@ -257,7 +257,7 @@ def plot_spinal_profile(df, raw_metrics_df, metric, age, sex):
             line=dict(width=3, color=COLORS_SEX[s]),
             customdata=dffs[["N"]],
             hovertemplate=(
-                "Age: %{x}<br>"
+                "Slice: %{x}<br>"
                 "Mean: %{y:.2f}<br>"
                 "N: %{customdata[0]}"
                 "<extra></extra>"
