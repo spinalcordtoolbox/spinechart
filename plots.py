@@ -106,7 +106,7 @@ def plot_heatmap(df, raw_metrics_df, metric, sex):
 
     fig.update_layout(
         title=f"{cfg['title']} heatmap",
-        xaxis_title="Slice",
+        xaxis_title="PAM50 Slice #",
         yaxis_title="Age decade",
     )
     
@@ -293,7 +293,7 @@ def plot_spinal_profile(df, raw_metrics_df, metric, age, sex):
     
     fig.update_layout(
         title=f"{cfg['title']} vs Slice (Age {age[0]} to {age[1]})",
-        xaxis_title="Slice",
+        xaxis_title="PAM50 Slice #",
         yaxis_title=cfg['axis']
     )
     
