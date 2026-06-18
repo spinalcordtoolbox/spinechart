@@ -91,6 +91,8 @@ def plot_heatmap(df, raw_metrics_df, metric, sex):
             y=pivot.index,
             colorscale="Viridis",
             colorbar={"title": cfg["axis"]},
+            zmin=cfg["ylim"][0],
+            zmax=cfg["ylim"][1],
             customdata=pivot_n.values[..., np.newaxis],
             hovertemplate=(
                 "Age: %{y}<br>"
