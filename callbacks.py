@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from plots import plot_age_profile, plot_spinal_profile, plot_heatmap
 from config.metrics import METRIC_CONFIG
 from config.demographics import SEX_MAP, AGE_DECADE_MAP
-from config.metrics import METRIC_CONFIG, RAW_TO_MODEL_KEY  
+from config.metrics import RAW_TO_MODEL_KEY  
 
 
 def compute_n(raw_metrics_df, level=None, age=None, sex_codes=None, mode="global"):

@@ -1,8 +1,7 @@
 pandas
 numpy
-pygam
-neuroCombat
 dash
 plotly
 dash_ag_grid
 dash_bootstrap_components
+rpy2
