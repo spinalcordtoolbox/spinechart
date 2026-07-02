@@ -11,6 +11,9 @@ import pandas as pd
 from pathlib import Path
 import subprocess
 
+from config.metrics import METRICS
+
+
 
 REPO_URL = "https://github.com/spinalcordtoolbox/PAM50-normalized-metrics.git"
 
@@ -118,6 +121,7 @@ def load_dataset(dataset_path):
         raise ValueError(f"No participants.tsv in {dataset_path}")
 
     mdf = pd.read_csv(tsv_file, sep="\t")
+    mdf["dataset_name"] = Path(dataset_path).resolve().name
 
     # Merge
     df_merged = df_all.merge(mdf, on="participant_id", how="left")
@@ -142,8 +146,12 @@ def clean_data(metrics_df, dem_df):
     clean_metrics["MEAN(solidity)"] = clean_metrics["MEAN(solidity)"] * 100
     clean_metrics["MEAN(compression_ratio)"] = clean_metrics["MEAN(diameter_AP)"] / clean_metrics["MEAN(diameter_RL)"]
     clean_metrics["sex_bin"] = (clean_metrics["sex"] == "F").astype(int)
-    # Site encoding
-    clean_metrics["site_id"] = (clean_metrics["institution"].astype("category").cat.codes)
+    # Dataset encoding
+    clean_metrics["dataset_id"] = (clean_metrics["dataset_name"].astype("category").cat.codes)
+    # No 0 values (not accepted in BCT distribution)
+    clean_metrics[METRICS] = clean_metrics[METRICS].replace(0, 1e-6)
+    
+    
 
     # clean["vendor_id"] = (clean["manufacturer"].astype("category").cat.codes)
     
@@ -167,7 +175,6 @@ def run_parsing_pipeline():
         
         metrics_dfs.append(data_df)
         
-        meta_df["dataset_name"] = Path(folder).resolve().name
         dem_dfs.append(meta_df)
 
     metrics_df_all = pd.concat(metrics_dfs, ignore_index=True)
