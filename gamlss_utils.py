@@ -1,5 +1,4 @@
 from pathlib import Path
-import pandas as pd
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri, default_converter
 from rpy2.robjects.conversion import localconverter

@@ -43,7 +43,6 @@ def fit_model(df, metric):
     """
     cfg = METRIC_MODEL_CONFIG[metric]
     model_col = cfg["model_col"]
-    link      = cfg["link"]
     rds_path  = cfg["rds_path"]
 
     if model_col not in df.columns:
