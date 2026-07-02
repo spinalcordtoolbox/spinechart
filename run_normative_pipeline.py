@@ -10,22 +10,17 @@ For each metric:
 
 import sys
 import pandas as pd
-import rpy2.robjects as ro
 from pathlib import Path
 
 from config.metrics import METRIC_MODEL_CONFIG
-from gamlss_predict import build_prediction_df, save_predictions, _ensure_helpers
+from gamlss_predict import build_prediction_df, save_predictions
 from gamlss_centiles import add_centiles_to_params, save_centile_curves, DEFAULT_CENTILES
+from gamlss_utils import load_model, _ensure_helpers
 
 import os
 os.add_dll_directory(r"C:\Program Files\R\R-4.6.0\bin\x64")
 os.environ["R_HOME"] = r"C:\Program Files\R\R-4.6.0"
 os.environ["PATH"]   = r"C:\Program Files\R\R-4.6.0\bin\x64;" + os.environ["PATH"]
-
-
-
-def load_model(rds_path):
-    return ro.r(f'readRDS("{Path(rds_path).as_posix()}")')
 
 
 def run_pipeline_for_metric(metric, grid):
@@ -49,7 +44,7 @@ def run_pipeline_for_metric(metric, grid):
     save_predictions(params, path=params_path)
 
     print("  Adding centile curves ...")
-    curves = add_centiles_to_params(params, centiles=DEFAULT_CENTILES, family="BCT")
+    curves = add_centiles_to_params(params, centiles=DEFAULT_CENTILES)
     save_centile_curves(curves, path=centile_path)
 
     print(f"  mu range: [{params['mu'].min():.2f}, {params['mu'].max():.2f}]")
