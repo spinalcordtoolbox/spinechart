@@ -12,7 +12,7 @@ import dash_bootstrap_components as dbc
 
 from config.metrics import METRICS, METRIC_CONFIG
 from config.anatomy import VERT_DICT
-from plots import plot_age_profile, plot_spinal_profile, plot_heatmap, plot_age_raincloud
+from plots import plot_age_raincloud
 from stats import summary_dataset, summary_pathology
 
 
