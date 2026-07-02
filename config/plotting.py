@@ -2,9 +2,9 @@ LABELS_FONT_SIZE = 14
 TICKS_FONT_SIZE = 12
 
 COLORS_SEX = {
-    0: 'blue',
-    1: 'red'
-    }
+    0: "#1f77b4",
+    1: "#c91010",
+}
 
 # To be same as spine-generic figures (https://github.com/spine-generic/spine-generic/blob/master/spinegeneric/cli/generate_figure.py#L114)
 PALETTE = {

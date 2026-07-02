@@ -1,314 +1,348 @@
 """
 This script contains the plotting functions.
 It creates interactive plots using Plotly for:
+- heatmap
 - age profile
 - spinal profile
+- age demographics rainclouds
 """
 
-
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-
 import numpy as np
 import pandas as pd
+
 from config.metrics import METRIC_CONFIG
 from config.plotting import COLORS_SEX
 from config.demographics import SEX_MAP, AGE_DECADE_MAP
 from config.anatomy import VERT_DICT
 
 
-def plot_heatmap(df, raw_metrics_df, metric, sex):
-    if sex != "All":
-        dff = df[df["sex_bin"]==SEX_MAP[sex]].copy()
-        dff_raw = raw_metrics_df[raw_metrics_df["sex_bin"]==SEX_MAP[sex]].copy()
-    else:
-        dff = df.copy()
-        dff_raw = raw_metrics_df.copy()
-        
+# ---------------------------------------------------------------------------
+# Centile band helpers
+# ---------------------------------------------------------------------------
+
+_CENTILE_BAND_PAIRS = [(5, 95, 0.08), (10, 90, 0.13), (25, 75, 0.20)]
+
+def _hex_to_rgba(hex_color, alpha):
+    """Converts hexadecimal color string to CSS color string format.
+
+    Args:
+        hex_color (str): hexadecimal color string
+        alpha (float): opacity
+
+    Returns:
+        (str): CSS color string
+    """
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def _add_centile_bands(fig, centile_agg, x_col, color, sex_label):
+    """ Overlay shaded centile bands and a solid median onto fig.
+
+    Args:
+        fig (plotly.graph_objects.Figure): figure to which the centile bands and median line are added.
+        centile_agg (pd.DataFrame): aggregated centile data obtained after running run_normative_pipeline.py
+        x_col (str): name of the x-axis column (age/slice_idx)
+        color (str):  hexadecimal color string used for the 50th centile line and shaded bands.
+        sex_label (str): "Male" or "Female"
+    """
+    
+    first_band = True
+
+    for lo, hi, alpha in _CENTILE_BAND_PAIRS:
+        col_lo, col_hi = f"centile_{lo}", f"centile_{hi}"
+        if col_lo not in centile_agg.columns or col_hi not in centile_agg.columns:
+            continue
+
+        # Lower anchor
+        fig.add_trace(go.Scatter(
+            x=centile_agg[x_col], y=centile_agg[col_lo],
+            mode="lines", line=dict(width=0),
+            showlegend=False, hoverinfo="skip",
+        ))
+        #  Add the upper boundary and fill the area down to the previous trace.
+        fig.add_trace(go.Scatter(
+            x=centile_agg[x_col], y=centile_agg[col_hi],
+            mode="lines", line=dict(width=0),
+            fill="tonexty",
+            fillcolor=_hex_to_rgba(color, alpha),
+            name=f"5th-95th ({sex_label})" if first_band else None,
+            showlegend=first_band,
+            hoverinfo="skip",
+        ))
+        first_band = False
+
+    # Overlay the 50th centile as a solid line.
+    if "centile_50" in centile_agg.columns:
+        fig.add_trace(go.Scatter(
+            x=centile_agg[x_col], y=centile_agg["centile_50"],
+            mode="lines",
+            line=dict(width=2.5, color=color),
+            name=f"Median ({sex_label})",
+            customdata=centile_agg["N"],
+            hovertemplate=(
+                f"50th centile ({sex_label})<br>"
+                f"{x_col}: %{{x}}<br>"
+                "Value: %{y:.2f}<br>"
+                "N: %{customdata:.0f}"
+                "<extra></extra>"
+            ),
+        ))
+
+
+# ---------------------------------------------------------------------------
+# Heatmap (centile_50 across age and slice)
+# ---------------------------------------------------------------------------
+
+def plot_heatmap(curves, metrics_df, metric, sex) :
+    """Plot heatmap
+
+    Args:
+        curves (pd.DataFrame): centile_curves for the given metric
+        metrics_df (pd.DataFrame): raw metric data (for N counts and VertLevel annotations)
+        metric (str): metric name
+        sex (str): sexes selected
+    Returns:
+        go.Figure: heatmap
+    """
+
+    cfg  = METRIC_CONFIG[metric]
     bins = [10, 20, 30, 40, 50, 60]
-    labels =  list(AGE_DECADE_MAP.keys()) #AGE_DECADES #
-    
-    # Convert ages to groups of age ranges
-    dff["age_decade"] = pd.cut(
-        dff["age"],
-        bins=bins,
-        labels=labels,
-        include_lowest=True
-    )
-    
-    heatmap_df = (
-        dff.groupby(
-            ["age_decade", "Slice (I->S)"],
-            observed=False
-        )[metric]
+    age_labels = list(AGE_DECADE_MAP.keys())
+
+    # Filter by sex
+    if sex != "All":
+        dfc = curves[curves["sex_bin"] == SEX_MAP[sex]].copy()
+        dfr = metrics_df[metrics_df["sex_bin"] == SEX_MAP[sex]].copy()
+    else:
+        dfc = curves.copy()
+        dfr = metrics_df.copy()
+
+    # Bin age into decades
+    dfc["age_decade"] = pd.cut(dfc["age"], bins=bins, labels=age_labels, include_lowest=True)
+
+    # Average centile_50 across sex_bin when sex=="All"
+    heat_df = (
+        dfc.groupby(["age_decade", "slice_idx"], observed=False)["centile_50"]
         .mean()
         .reset_index()
     )
-    
-    pivot = heatmap_df.pivot(
-        index="age_decade",
-        columns="Slice (I->S)",
-        values=metric
-    )
-    
-    
-    # compute subgroup size
-    dff_raw["age_decade"] = pd.cut(
-        dff_raw["age"],
-        bins=bins,
-        labels=labels,
-        include_lowest=True
-    )
-    
+    pivot = heat_df.pivot(index="age_decade", columns="slice_idx", values="centile_50")
+
+    # N counts from raw data
+    dfr["age_decade"] = pd.cut(dfr["age"], bins=bins, labels=age_labels, include_lowest=True)
     dff_n = (
-        dff_raw.groupby(
-            ["age_decade", "Slice (I->S)"],
-            observed=False
-        )["participant_id"]
+        dfr.groupby(["age_decade", "Slice (I->S)"], observed=False)["participant_id"]
         .nunique()
         .reset_index(name="N")
+        .rename(columns={"Slice (I->S)": "slice_idx"})
+    )
+    pivot_n = (
+        dff_n.pivot(index="age_decade", columns="slice_idx", values="N")
+        .reindex(index=pivot.index, columns=pivot.columns)
     )
 
-    pivot_n = dff_n.pivot(
-        index="age_decade",
-        columns="Slice (I->S)",
-        values="N"
-    )
-
-    # Align N matrix to metric matrix
-    pivot_n = pivot_n.reindex(
-        index=pivot.index,
-        columns=pivot.columns
-    )
-
-    cfg = METRIC_CONFIG[metric]
-    
-    fig = go.Figure(
-        go.Heatmap(
-            z=pivot.values,
-            x=pivot.columns,
-            y=pivot.index,
-            colorscale="Viridis",
-            colorbar={"title": cfg["axis"]},
-            zmin=cfg["ylim"][0],
-            zmax=cfg["ylim"][1],
-            customdata=pivot_n.values[..., np.newaxis],
-            hovertemplate=(
-                "Age: %{y}<br>"
-                "Slice: %{x}<br>"
-                "Value: %{z:.2f}<br>"
-                "N: %{customdata[0]:.0f}"
-                "<extra></extra>"
-                )
-        )
-    )
+    fig = go.Figure(go.Heatmap(
+        z=pivot.values,
+        x=pivot.columns,
+        y=pivot.index,
+        colorscale="Viridis",
+        colorbar={"title": cfg["axis"]},
+        zmin=cfg["ylim"][0],
+        zmax=cfg["ylim"][1],
+        customdata=pivot_n.values[..., np.newaxis],
+        hovertemplate=(
+            "Age: %{y}<br>Slice: %{x}<br>"
+            "Value: %{z:.2f}<br>"
+            "N: %{customdata[0]:.0f}"
+            "<extra></extra>"
+        ),
+    ))
 
     fig.update_layout(
         title=f"{cfg['title']} heatmap",
         xaxis_title="PAM50 Slice #",
         yaxis_title="Age decade",
     )
-    
-    xmin = df["Slice (I->S)"].min()
-    xmax = df["Slice (I->S)"].max()
-    fig.update_xaxes(
-        range=[xmax, xmin],
-        linecolor="darkslategray",
-        )
-    
+
+    xmin = metrics_df["Slice (I->S)"].min()
+    xmax = metrics_df["Slice (I->S)"].max()
+    fig.update_xaxes(range=[xmax, xmin], linecolor="darkslategray")
+
     # Add vertebral boundary lines
-    ticks, mids, labels = get_vert_ticks(dff)
+    ticks, mids, vlabels = get_vert_ticks(dfr)
     for t in ticks:
-
-        fig.add_vline(
-            x=t,
-            line_width=1,
-            line_dash="dot",
-            line_color="whitesmoke",
-            opacity=0.8
-        )
-        
-    # Vertebral labels annotations
-    for x, label in zip(mids, labels):
-
-        fig.add_annotation(
-            x=x,
-            y=0,
-            xref="x",
-            yref="paper",
-            text=label,
-            showarrow=False,
-            font=dict(size=12, color="whitesmoke")
-        )
-
+        fig.add_vline(x=t, line_width=1, line_dash="dot", line_color="whitesmoke", opacity=0.8)
+    # Vertebral level names annotations
+    for x, label in zip(mids, vlabels):
+        fig.add_annotation(x=x, y=0, xref="x", yref="paper",
+                           text=label, showarrow=False,
+                           font=dict(size=12, color="whitesmoke"))
     return fig
 
 
-def plot_age_profile(df, raw_metrics_df, metric, level, sex):
-    # compute mean per age and sex
-    dff = df[
-        (df["VertLevel"]==level)
-        & (df["sex_bin"].isin(sex))
-    ]
-    dff_mean = (
-        dff.groupby(["age", "sex_bin"], as_index=False)[metric]
-        .mean()
-        .sort_values("age")
-    )
-    
-    # compute subgroup size
-    dff_raw = raw_metrics_df[
-        (raw_metrics_df["VertLevel"]==level)
-        & (raw_metrics_df["sex_bin"].isin(sex))
-    ]
-    dff_n = (
-        dff_raw.groupby(["age", "sex_bin"])["participant_id"]
-        .nunique()
-        .reset_index(name="N")
-    )
-    
-    # Merge mean and subgroup size df
-    dff_plot = dff_mean.merge(
-        dff_n,
-        on=["age", "sex_bin"],
-        how="left"
-    )
-    dff_plot["N"] = dff_plot["N"].fillna(0).astype(int)
+# ---------------------------------------------------------------------------
+# Age profile
+# ---------------------------------------------------------------------------
 
+def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> go.Figure:
+    """Plot the spinal profile, with centile curves
 
-    fig = go.Figure()
-    
+    Args:
+        curves (pd.DataFrame): centile_curves for the given metric
+        metrics_df (pd.DataFrame): raw metric data (for N counts and VertLevel annotations)
+        metric (str): metric name
+        sex (list): sexes selected
+        slice_vert_map : {slice_idx: VertLevel} dict built from metrics_df
+
+    Returns:
+        go.Figure: age profile
+    """
+
     cfg = METRIC_CONFIG[metric]
+    fig = go.Figure()
 
-    # Add a trace for each sex
+    # Slices that belong to this VertLevel
+    level_slices = {s for s, v in slice_vert_map.items() if v == level}
+
     for s in sex:
-        dffs = dff_plot[dff_plot["sex_bin"] == s]
-        label = "Male" if s == 0 else "Female"
+        color     = COLORS_SEX[s]
+        sex_label = "Male" if s == 0 else "Female"
 
-        fig.add_trace(go.Scatter(
-            x=dffs["age"],
-            y=dffs[metric],
-            mode="lines",
-            name=label,
-            line=dict(width=3, color=COLORS_SEX[s]),
-            customdata=dffs[["N"]],
-            hovertemplate=(
-                "Age: %{x}<br>"
-                "Mean: %{y:.2f}<br>"
-                "N: %{customdata[0]}"
-                "<extra></extra>"
-            )
-        ))
+        dfc = curves[
+            curves["slice_idx"].isin(level_slices) &
+            (curves["sex_bin"] == s)
+        ]
+        if dfc.empty:
+            continue
+
+        # Average centile columns across slices within this vertebral level
+        centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
+        centile_agg  = (
+            dfc.groupby("age")[centile_cols]
+            .mean()
+            .reset_index()
+            .sort_values("age")
+        )
+        # Raw counts at each age
+        n_by_age = (
+            metrics_df.groupby("age")["participant_id"]
+            .nunique()
+            .rename("N")
+            .reset_index()
+        )
+
+        centile_agg = centile_agg.merge(n_by_age, on="age", how="left").fillna(0).astype(int)
+
+        _add_centile_bands(fig, centile_agg, x_col="age", color=color, sex_label=sex_label)
+
+    # N counts from raw data
+    dff_raw = metrics_df[
+        (metrics_df["VertLevel"] == level) &
+        metrics_df["sex_bin"].isin(sex)
+    ]
+    n_total = dff_raw["participant_id"].nunique()
+    
 
     fig.update_layout(
-        title=f"{cfg['title']} vs Age ({VERT_DICT[level]})",
+        title=f"{cfg['title']} vs Age ({VERT_DICT[level]})<br><sup>N = {n_total}</sup>",
         xaxis_title="Age (years)",
-        yaxis_title=cfg['axis']
+        yaxis_title=cfg["axis"],
     )
-    
-    fig.update_yaxes(
-        range=cfg['ylim'],
-        showgrid=True
-    )
-
+    fig.update_yaxes(range=cfg["ylim"], showgrid=True)
     return fig
 
 
-def plot_spinal_profile(df, raw_metrics_df, metric, age, sex):
-    # compute mean per slice and sex
-    dff = df[(df["age"].between(age[0], age[1])) & df["sex_bin"].isin(sex)]
-    dff_mean = (
-        dff.groupby(["Slice (I->S)", "sex_bin"], as_index=False)[metric]
-        .mean()
-        .sort_values("Slice (I->S)")
-    )
-    
-    # compute subgroup size
-    dff_raw = raw_metrics_df[(raw_metrics_df["age"].between(age[0], age[1])) & raw_metrics_df["sex_bin"].isin(sex)]
-    dff_n = (
-        dff_raw.groupby(["Slice (I->S)", "sex_bin"])["participant_id"]
-        .nunique()
-        .reset_index(name="N")
-    )
-    
-    # Merge mean and subgroup size df
-    dff_plot = dff_mean.merge(
-        dff_n,
-        on=["Slice (I->S)", "sex_bin"],
-        how="left"
-    )
-    dff_plot["N"] = dff_plot["N"].fillna(0).astype(int)
-    
+# ---------------------------------------------------------------------------
+# Spinal profile
+# ---------------------------------------------------------------------------
 
-    fig = go.Figure()
+def plot_spinal_profile(curves, metrics_df, metric, age, sex):
+    """Plot the spinal profile, with centile curves
+
+    Args:
+        curves (pd.DataFrame): centile_curves for the given metric
+        metrics_df (pd.DataFrame): raw metric data (for N counts and VertLevel annotations)
+        metric (str): metric name
+        age (list): age range selected
+        sex (list): sexes selected
+
+    Returns:
+        go.Figure: spinal profile
+    """
     
     cfg = METRIC_CONFIG[metric]
+    fig = go.Figure()
 
-    # Add a trace for each sex
     for s in sex:
-        dffs = dff_plot[dff_plot["sex_bin"] == s]
+        color     = COLORS_SEX[s]
+        sex_label = "Male" if s == 0 else "Female"
 
-        label = "Male" if s == 0 else "Female"
+        dfc = curves[
+            curves["age"].between(age[0], age[1]) &
+            (curves["sex_bin"] == s)
+        ]
+        if dfc.empty:
+            continue
 
-        fig.add_trace(go.Scatter(
-            x=dffs["Slice (I->S)"],
-            y=dffs[metric],
-            name=label,
-            mode="lines",
-            line=dict(width=3, color=COLORS_SEX[s]),
-            customdata=dffs[["N"]],
-            hovertemplate=(
-                "Slice: %{x}<br>"
-                "Mean: %{y:.2f}<br>"
-                "N: %{customdata[0]}"
-                "<extra></extra>"
-            )
-        ))
+        # Average centile columns across the age range at each slice
+        centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
+        centile_agg  = (
+            dfc.groupby("slice_idx")[centile_cols]
+            .mean()
+            .reset_index()
+            .sort_values("slice_idx")
+        )
         
-    # Add vertebral boundary lines
-    ticks, mids, labels = get_vert_ticks(dff)
-    for t in ticks:
-
-        fig.add_vline(
-            x=t,
-            line_width=1,
-            line_dash="dot",
-            line_color="gray",
-            opacity=0.8
+        dfc = curves[
+            curves["age"].between(age[0], age[1]) &
+            (curves["sex_bin"] == s)
+        ]
+        
+        # Raw N count for each slice
+        n_by_slice = (
+            metrics_df[
+                metrics_df["age"].between(age[0], age[1]) &
+                (metrics_df["sex_bin"] == s)
+            ]
+            .groupby("Slice (I->S)")["participant_id"]
+            .nunique()
+            .rename("N")
         )
 
-    # Vertebral labels annotations
-    for x, label in zip(mids, labels):
+        centile_agg["N"] = centile_agg["slice_idx"].map(n_by_slice).fillna(0).astype(int)
 
-        fig.add_annotation(
-            x=x,
-            y=0,
-            xref="x",
-            yref="paper",
-            text=label,
-            showarrow=False,
-            font=dict(size=12, color="gray")
-        )
+        _add_centile_bands(fig, centile_agg, x_col="slice_idx", color=color, sex_label=sex_label)
+
+    # Vertebral annotations from the raw data
+    dff_raw = metrics_df[
+        metrics_df["age"].between(age[0], age[1]) &
+        metrics_df["sex_bin"].isin(sex)
+    ]
+    if not dff_raw.empty:
+        ticks, mids, vlabels = get_vert_ticks(dff_raw)
+        for t in ticks:
+            fig.add_vline(x=t, line_width=1, line_dash="dot",
+                          line_color="gray", opacity=0.8)
+        for x, label in zip(mids, vlabels):
+            fig.add_annotation(x=x, y=0, xref="x", yref="paper",
+                               text=label, showarrow=False,
+                               font=dict(size=12, color="gray"))
+
     
+    n_total = dff_raw["participant_id"].nunique() if not dff_raw.empty else 0
+    xmin = metrics_df["Slice (I->S)"].min()
+    xmax = metrics_df["Slice (I->S)"].max()
+
     fig.update_layout(
-        title=f"{cfg['title']} vs Slice (Age {age[0]} to {age[1]})",
+        title=f"{cfg['title']} vs Slice (Age {age[0]}-{age[1]})<br><sup>N = {n_total}</sup>",
         xaxis_title="PAM50 Slice #",
-        yaxis_title=cfg['axis']
+        yaxis_title=cfg["axis"],
     )
-    
-    xmin = df["Slice (I->S)"].min()
-    xmax = df["Slice (I->S)"].max()
-    fig.update_xaxes(
-        range=[xmax, xmin],
-        linecolor="darkslategray",
-        )
-    
-    fig.update_yaxes(
-        range=cfg['ylim'],
-        showgrid=True
-    )
-    
+    fig.update_xaxes(range=[xmax, xmin], linecolor="darkslategray")
+    fig.update_yaxes(range=cfg["ylim"], showgrid=True)
     return fig
 
 
