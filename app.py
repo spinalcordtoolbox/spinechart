@@ -16,7 +16,9 @@ from parsing import run_parsing_pipeline
 from layout import create_layout
 from callbacks import register_callbacks
 from config.metrics import METRIC_MODEL_CONFIG
+from model_manager import ensure_models
 
+ensure_models()
 metrics_df, dem_df = run_parsing_pipeline()
 
 # Deriving from the raw data slice_idx to VertLevel mapping
@@ -35,7 +37,7 @@ for metric in METRIC_MODEL_CONFIG:
         centile_curves[metric] = pd.read_parquet(p)
         print(f"  Centile curves loaded: {metric}  ({len(centile_curves[metric]):,} rows)")
     else:
-        print(f"  [WARN] No centile curves for '{metric}' — run run_normative_pipeline.py")
+        print(f"  [WARN] No centile curves for '{metric}' - run run_normative_pipeline.py")
 
 # App
 app = Dash(
