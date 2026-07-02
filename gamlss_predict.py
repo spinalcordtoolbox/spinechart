@@ -7,24 +7,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import rpy2.robjects as ro
-from gamlss_utils import load_model
+from gamlss_utils import _ensure_helpers
 
 # Fixing windows environment path variables
 import os
 os.add_dll_directory(r"C:\Program Files\R\R-4.6.0\bin\x64")
 os.environ["R_HOME"] = r"C:\Program Files\R\R-4.6.0"
 os.environ["PATH"]   = r"C:\Program Files\R\R-4.6.0\bin\x64;" + os.environ["PATH"]
-
-_HELPERS_PATH = Path(__file__).parent / "gamlss_helper.R"
-_helpers_sourced = False
-
-
-def _ensure_helpers():
-    """Source gamlss_helpers.R once per process."""
-    global _helpers_sourced
-    if not _helpers_sourced:
-        ro.r(f'source("{_HELPERS_PATH.as_posix()}")')
-        _helpers_sourced = True
 
 
 def build_prediction_df(r_fit, grid: pd.DataFrame) -> pd.DataFrame:
@@ -114,25 +103,3 @@ def save_predictions(params: pd.DataFrame,
     p.parent.mkdir(parents=True, exist_ok=True)
     params.to_parquet(p, index=False)
     print(f"Saved {len(params):,} rows → {p}")
-
-
-if __name__ == "__main__":
-
-    print("Loading model...")
-    fit = load_model()
-
-    print("\n── Validation ──────────────────────────────────────────────────")
-    ok = validate_bypass(fit)
-    print(f"\nBypass valid: {ok}")
-
-    print("\n── Full grid prediction ────────────────────────────────────────")
-    grid = pd.read_parquet("output/predictions/grid.parquet")
-    print(f"Grid: {grid.shape[0]:,} rows × {grid.shape[1]} cols")
-
-    params = build_prediction_df(fit, grid)
-    print(params[["age", "slice_idx", "sex_bin", "mu", "sigma", "nu", "tau"]].head(10))
-    print(f"\nmu range in grid: [{params['mu'].min():.1f}, {params['mu'].max():.1f}]")
-
-    print("Saving...")
-    save_predictions(params)
-    print("Done.")
