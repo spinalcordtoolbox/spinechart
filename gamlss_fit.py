@@ -4,18 +4,14 @@ gamlss_fit.py
 Fit a BCT GAMLSS model for one metric. Callable per-metric or run as a script
 to fit all metrics sequentially.
 """
-import os
-import rpy2.robjects as ro
+
 from pathlib import Path
 from parsing import run_parsing_pipeline
 from gamlss_utils import pandas_to_r
 from config.metrics import METRIC_MODEL_CONFIG
-
-# Fixing windows environment paths
-os.add_dll_directory(r"C:\Program Files\R\R-4.6.0\bin\x64")
-os.environ["R_HOME"] = r"C:\Program Files\R\R-4.6.0"
-os.environ["PATH"]   = r"C:\Program Files\R\R-4.6.0\bin\x64;" + os.environ["PATH"]
-
+from r_setup import configure_r_environment
+configure_r_environment()
+import rpy2.robjects as ro
 
 def prepare_metric_df(raw_df, metric: str):
     """Rename raw column to model_col (R compatible name) and return only the required columns."""
