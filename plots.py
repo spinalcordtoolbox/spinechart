@@ -226,19 +226,19 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> 
             .reset_index()
             .sort_values("age")
         )
-        # Raw counts at each age
+        # Raw counts at each age for hovertemplate
         n_by_age = (
             metrics_df.groupby("age")["participant_id"]
             .nunique()
             .rename("N")
             .reset_index()
         )
-
-        centile_agg = centile_agg.merge(n_by_age, on="age", how="left").fillna(0).astype(int)
+        centile_agg = centile_agg.merge(n_by_age, on="age", how="left")
+        centile_agg["N"] = centile_agg["N"].fillna(0).astype(int)
 
         _add_centile_bands(fig, centile_agg, x_col="age", color=color, sex_label=sex_label)
 
-    # N counts from raw data
+    # N counts from raw data for subtitle
     dff_raw = metrics_df[
         (metrics_df["VertLevel"] == level) &
         metrics_df["sex_bin"].isin(sex)
@@ -301,7 +301,7 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex):
             (curves["sex_bin"] == s)
         ]
         
-        # Raw N count for each slice
+        # Raw N count for each slice for hovertemplate
         n_by_slice = (
             metrics_df[
                 metrics_df["age"].between(age[0], age[1]) &
@@ -316,7 +316,7 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex):
 
         _add_centile_bands(fig, centile_agg, x_col="slice_idx", color=color, sex_label=sex_label)
 
-    # Vertebral annotations from the raw data
+    # Vertebral annotations from the raw data for subtitle
     dff_raw = metrics_df[
         metrics_df["age"].between(age[0], age[1]) &
         metrics_df["sex_bin"].isin(sex)
