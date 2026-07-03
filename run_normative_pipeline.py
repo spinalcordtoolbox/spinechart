@@ -17,11 +17,6 @@ from gamlss_predict import build_prediction_df, save_predictions
 from gamlss_centiles import add_centiles_to_params, save_centile_curves, DEFAULT_CENTILES
 from gamlss_utils import load_model, _ensure_helpers
 
-import os
-os.add_dll_directory(r"C:\Program Files\R\R-4.6.0\bin\x64")
-os.environ["R_HOME"] = r"C:\Program Files\R\R-4.6.0"
-os.environ["PATH"]   = r"C:\Program Files\R\R-4.6.0\bin\x64;" + os.environ["PATH"]
-
 
 def run_pipeline_for_metric(metric, grid):
     cfg      = METRIC_MODEL_CONFIG[metric]

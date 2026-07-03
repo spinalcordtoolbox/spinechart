@@ -6,8 +6,10 @@ For each row of the prediction grid (defined age, slice_idx, sex_bin),
 returns the response value corresponding to each requested centile, via the qBCT R function.
 """
 from pathlib import Path
-
 import numpy as np
+
+from r_setup import configure_r_environment
+configure_r_environment()
 import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
 
