@@ -65,3 +65,4 @@ python build_grid.py
 python run_normative_pipeline.py
 ```
 Data used to generate the models is automatically downloaded from the [PAM50-normalized-metrics repo](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics). So far only [spine-generic_multi-subject](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/spine-generic_multi-subject) and [whole-spine](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/whole-spine) datasets are included.
+
