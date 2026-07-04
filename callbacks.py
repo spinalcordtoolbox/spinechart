@@ -14,32 +14,6 @@ from config.demographics import SEX_MAP, AGE_DECADE_MAP
 from config.metrics import RAW_TO_MODEL_KEY  
 
 
-def compute_n(raw_metrics_df, level=None, age=None, sex_codes=None, mode="global"):
-    """Callback helper to compute the number of participants in the raw dataset corresponding to the selected subgroup
-
-    Args:
-        metrics_df (pd.DataFrame): Contains the raw data
-        level (int, optional): Vertebral level of the subgroup. Defaults to None.
-        age (list, optional): Age range of the subgroup. Defaults to None.
-        sex_codes (list, optional): Sex of the subgroup. Defaults to None.
-        mode (str, optional): Targeted plot (age_profile, spinal_profile, global). Defaults to "global".
-
-    Returns:
-        int: size of the subgroup
-    """
-    df = raw_metrics_df.copy()
-
-    if sex_codes is not None:
-        df = df[df["sex_bin"].isin(sex_codes)]
-
-    if mode == "age_profile":
-        df = df[df["VertLevel"] == level]
-
-    elif mode == "spinal_profile":
-        df = df[df["age"].between(age[0], age[1])]
-
-    return df["participant_id"].nunique()
-
 
 def register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map):
     # HEATMAP
