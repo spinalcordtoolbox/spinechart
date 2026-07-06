@@ -6,14 +6,11 @@ Site-neutral BCT distributional parameters without calling predict.gamlss.
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import rpy2.robjects as ro
-from gamlss_utils import _ensure_helpers
 
-# Fixing windows environment path variables
-import os
-os.add_dll_directory(r"C:\Program Files\R\R-4.6.0\bin\x64")
-os.environ["R_HOME"] = r"C:\Program Files\R\R-4.6.0"
-os.environ["PATH"]   = r"C:\Program Files\R\R-4.6.0\bin\x64;" + os.environ["PATH"]
+from gamlss_utils import _ensure_helpers
+from r_setup import configure_r_environment
+configure_r_environment()
+import rpy2.robjects as ro
 
 
 def build_prediction_df(r_fit, grid: pd.DataFrame) -> pd.DataFrame:
