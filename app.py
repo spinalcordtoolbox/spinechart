@@ -11,6 +11,8 @@ from dash import Dash
 import dash_bootstrap_components as dbc
 import pandas as pd
 from pathlib import Path
+import webbrowser
+from threading import Timer
 
 from parsing import run_parsing_pipeline
 from layout import create_layout
@@ -47,5 +49,9 @@ app = Dash(
 app.layout = create_layout(metrics_df, dem_df)
 register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map)
 
+def open_browser():
+      webbrowser.open_new("http://127.0.0.1:8050")
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    Timer(1, open_browser).start()
+    app.run(debug=False)
