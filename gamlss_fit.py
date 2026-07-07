@@ -92,6 +92,7 @@ if __name__ == "__main__":
         "metrics",
         nargs="*",
         default=list(METRIC_MODEL_CONFIG.keys()),
+        choices=list(METRIC_MODEL_CONFIG.keys()),
         help="Metrics to fit (default: all)."
     )
 
