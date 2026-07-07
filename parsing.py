@@ -1,62 +1,77 @@
-"""
-This script handles the data parsing pipeline
-It:
-- Automatically finds dataset folders containing CSV files and metadata (participants.tsv)
-- Loads and merges all dataset files into a single dataframe
-- Cleans the combined dataset
-- Outputs a dataframe ready to be used in the normative model pipeline
-"""
+import zipfile
+from pathlib import Path
+from urllib.parse import quote
 
 import pandas as pd
-from pathlib import Path
-import subprocess
+import requests
+from tqdm import tqdm
 
 from config.metrics import METRICS
 
+# Update this for each release
+MODEL_RELEASE = "r20260707"
+ZIP_NAME = "Source code (zip)"
+
+RELEASE_URL = (
+    "https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/"
+    f"archive/refs/tags/{MODEL_RELEASE}.zip"
+)
+
+DATA_ROOT = Path("data/")
 
 
-REPO_URL = "https://github.com/spinalcordtoolbox/PAM50-normalized-metrics.git"
-
-DATA_ROOT = Path("data/PAM50-normalized-metrics")
-
-
-def fetch_normative_database(repo_url=REPO_URL, local_path=DATA_ROOT):
+def fetch_normative_database(url=RELEASE_URL, local_path=DATA_ROOT):
     """
     Downloads the normative database if it does not exist.
-    Otherwise updates it using git pull.
 
     Returns
     -------
     Path
-        Local path to the repository
+        Local path to the repository.
     """
+    if Path(f"{local_path}/PAM50-normalized-metrics-{MODEL_RELEASE}").exists():
+        return local_path / f"PAM50-normalized-metrics-{MODEL_RELEASE}"
+    
+    print(f"Downloading PAM50-normalized-metrics release {MODEL_RELEASE}...")
 
     local_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not local_path.exists():
-        print(f"Cloning repository into: {local_path}")
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
 
-        subprocess.run(
-            ["git", "clone", repo_url, str(local_path)],
-            check=True,
-        )
+    total_size = int(response.headers.get("content-length", 0))
+    zip_path = local_path / "release.zip"
 
-    else:
-        print(f"Updating repository in: {local_path}")
+    with (
+        zip_path.open("wb") as f,
+        tqdm(
+            total=total_size,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            desc="Downloading data",
+        ) as pbar,
+    ):
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+                pbar.update(len(chunk))
 
-        subprocess.run(
-            ["git", "-C", str(local_path), "pull"],
-            check=True,
-        )
+    print("Extracting...")
 
-    return local_path
+    with zipfile.ZipFile(zip_path, "r") as z:
+        z.extractall(local_path)
+
+    zip_path.unlink()
+
+    return local_path / f"PAM50-normalized-metrics-{MODEL_RELEASE}"
 
 
 
 def find_datasets(root):
     """
     Finds dataset folders containing CSV + participants.tsv
-    (Currently only )
+    (Currently only spine-generic_multi-subject and whole-spine)
     """
     candidate_dir = [
         root / "spinal_cord" / "spine-generic_multi-subject",
@@ -136,8 +151,8 @@ def clean_data(metrics_df, dem_df):
     - Removes NaN values
     - Convert Solidity values into percentage values
     - Computes AP/RL ratio
-    - Binary index for sex
-    - Index for site
+    - Creates binary sex encoding
+    - Creates dataset index
     """
     
     # Data
@@ -151,16 +166,11 @@ def clean_data(metrics_df, dem_df):
     # No 0 values (not accepted in BCT distribution)
     clean_metrics[METRICS] = clean_metrics[METRICS].replace(0, 1e-6)
     
-    
-
-    # clean["vendor_id"] = (clean["manufacturer"].astype("category").cat.codes)
-    
     # Meta data  
     clean_dem = dem_df.dropna(subset=["sex", ]).copy()
     clean_dem["sex"] = clean_dem["sex"].replace({"M": "Male", "F": "Female"})
 
     return clean_metrics, clean_dem
-
 
 
 def run_parsing_pipeline():
