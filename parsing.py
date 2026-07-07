@@ -94,7 +94,6 @@ def load_dataset(dataset_path):
     - merges metadata
     """
     
-    
     # Data
     csv_files = list(dataset_path.glob("*.csv"))
 
@@ -150,11 +149,7 @@ def clean_data(metrics_df, dem_df):
     clean_metrics["dataset_id"] = (clean_metrics["dataset_name"].astype("category").cat.codes)
     # No 0 values (not accepted in BCT distribution)
     clean_metrics[METRICS] = clean_metrics[METRICS].replace(0, 1e-6)
-    
-    
-
-    # clean["vendor_id"] = (clean["manufacturer"].astype("category").cat.codes)
-    
+        
     # Meta data  
     clean_dem = dem_df.dropna(subset=["sex", ]).copy()
     clean_dem["sex"] = clean_dem["sex"].replace({"M": "Male", "F": "Female"})
@@ -163,13 +158,18 @@ def clean_data(metrics_df, dem_df):
 
 
 
-def run_parsing_pipeline():
+def run_parsing_pipeline(extra_dataset=None):
+    
     path = fetch_normative_database()
-    datasets = find_datasets(path)
     
     metrics_dfs = []
     dem_dfs = []
-        
+    
+    datasets = find_datasets(Path(path))
+    
+    if extra_dataset is not None:
+        datasets.append(Path(extra_dataset))
+     
     for folder in datasets:
         data_df, meta_df = load_dataset(folder)
         

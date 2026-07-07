@@ -6,7 +6,10 @@ to fit all metrics sequentially.
 """
 
 from pathlib import Path
-from parsing import run_parsing_pipeline
+import sys
+import argparse
+
+from parsing import run_parsing_pipeline, fetch_normative_database
 from gamlss_utils import pandas_to_r
 from config.metrics import METRIC_MODEL_CONFIG
 from r_setup import configure_r_environment
@@ -82,12 +85,31 @@ def fit_model(df, metric):
 
 
 if __name__ == "__main__":
-    import sys
+    
+    parser = argparse.ArgumentParser()
 
-    metrics_to_fit = sys.argv[1:] or list(METRIC_MODEL_CONFIG.keys())
+    parser.add_argument(
+        "metrics",
+        nargs="*",
+        default=list(METRIC_MODEL_CONFIG.keys()),
+        help="Metrics to fit (default: all)."
+    )
+
+    parser.add_argument(
+        "--extra-data",
+        type=Path,
+        default=None,
+        help="Path to an additional dataset."
+    )
+
+    args = parser.parse_args()
+
+
+    metrics_to_fit = args.metrics
     print(f"Fitting metrics: {metrics_to_fit}")
+    
 
-    raw_df, _ = run_parsing_pipeline()
+    raw_df, _ = run_parsing_pipeline(args.extra_data)
 
     for metric in metrics_to_fit:
         print(f"\n{'─'*60}")
@@ -96,3 +118,4 @@ if __name__ == "__main__":
         print(f"  Rows: {len(df):,}")
         fit_model(df, metric)
         print("  Done.")
+		
