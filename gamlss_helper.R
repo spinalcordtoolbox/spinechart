@@ -2,6 +2,7 @@ suppressPackageStartupMessages({
   library(gamlss)
   library(gamlss.add)
   library(gamlss.dist)
+  library(dplyr)
 })
 
 # ---------------------------------------------------------------------------
@@ -102,7 +103,7 @@ predict_parameter <- function(fit, what, age, slice_idx, sex_bin, site_neutral =
   # Smooth deviations from stored fit$X.s
   interps <- build_smooth_interps(fit, what)
   if (!is.null(interps$age)) {
-    x   <- pmax(pmin(as.numeric(age),       interps$age$x_range[2]),       interps$age$x_range[1])
+    x   <- pmax(pmin(as.numeric(age), interps$age$x_range[2]), interps$age$x_range[1])
     eta <- eta + interps$age$fn(x)
   }
   if (!is.null(interps$slice_idx)) {
@@ -121,12 +122,164 @@ predict_parameter <- function(fit, what, age, slice_idx, sex_bin, site_neutral =
 predict_gamlss_params <- function(fit, age, slice_idx, sex_bin,
                                   site_neutral = TRUE) {
   out <- data.frame(
-    mu    = predict_parameter(fit, "mu",    age, slice_idx, sex_bin, site_neutral),
+    mu    = predict_parameter(fit, "mu", age, slice_idx, sex_bin, site_neutral),
     sigma = predict_parameter(fit, "sigma", age, slice_idx, sex_bin, site_neutral)
   )
   if ("nu"  %in% fit$parameters)
-    out$nu  <- predict_parameter(fit, "nu",  age, slice_idx, sex_bin, site_neutral)
+    out$nu  <- predict_parameter(fit, "nu", age, slice_idx, sex_bin, site_neutral)
   if ("tau" %in% fit$parameters)
     out$tau <- predict_parameter(fit, "tau", age, slice_idx, sex_bin, site_neutral)
   out
+}
+
+
+# ---------------------------------------------------------------------------
+# Out-of-sample scoring
+# ---------------------------------------------------------------------------
+# Retrieve the distribution function used during the fitting
+dist_fun_for_fit <- function(fit, prefix) {
+  candidate <- paste0(prefix, fit$family[1])
+  if (!exists(candidate, mode = "function")) candidate <- paste0(prefix, as.character(fit$family)[1])
+  get(candidate, mode = "function")
+}
+
+# Returns the expected centile score given a subject's biological variables
+score_against_reference_chart <- function(value, age, slice_idx, sex_bin, fit, site_neutral = TRUE, prob_eps = 1e-8) {
+  params <- predict_gamlss_params(fit, age, slice_idx, sex_bin, site_neutral) # extract fitted model params at the given age, slice, sex
+  p_fun <- dist_fun_for_fit(fit, "p")
+  args <- list(q = as.numeric(value), mu = params$mu, sigma = params$sigma)
+  if ("nu"  %in% fit$parameters) args$nu  <- params$nu
+  if ("tau" %in% fit$parameters) args$tau <- params$tau
+  p <- suppressWarnings(do.call(p_fun, args)) # Retrieve the quantile value
+  pmin(pmax(as.numeric(p), prob_eps), 1 - prob_eps)
+}
+
+# Converts a z-score on the normative reference chart back into the corresponding measurement value.
+reference_chart_quantile <- function(z_value, age, slice_idx, sex_bin, fit, site_neutral = TRUE, prob_eps = 1e-8) {
+  params <- predict_gamlss_params(fit, age, slice_idx, sex_bin, site_neutral)
+  q_fun <- dist_fun_for_fit(fit, "q")
+  p <- pmin(pmax(pnorm(as.numeric(z_value)), prob_eps), 1 - prob_eps)
+  args <- list(p = p, mu = params$mu, sigma = params$sigma)
+  if ("nu"  %in% fit$parameters) args$nu  <- params$nu
+  if ("tau" %in% fit$parameters) args$tau <- params$tau
+  as.numeric(suppressWarnings(do.call(q_fun, args)))
+}
+
+
+# ---------------------------------------------------------------------------
+# Cohort-level CN-anchored alignment, bypass version.
+# Requires >= min_cn_for_alignment CN subjects per dataset to estimate a
+# per-site z-mean/z-sd correction. NOT applicable to n=1 uploads -- those
+# should use score_against_reference_chart directly (site-neutral only).
+# ---------------------------------------------------------------------------
+align_to_reference_chart_by_cn <- function(
+  data,
+  fit,
+  value_col = "value",
+  dataset_col = "dataset",
+  subject_col = "subject",
+  diagnosis_col = "pathology",
+  age_col = "age",
+  slice_col = "slice_idx",
+  sex_col = "sex_bin",
+  cn_label = "CN",
+  min_cn_for_alignment = 10,
+  # feature_id = NA_character_,
+  calibration_eligible_col = NULL,
+  site_neutral = TRUE,
+  prob_eps = 1e-8
+) {
+  # Determine which subjects are allowed to contribute to site calibration. By default, all subjects are eligible.
+  calibration_eligible <- rep(TRUE, nrow(data))
+  if (!is.null(calibration_eligible_col) && calibration_eligible_col %in% names(data)) {
+    calibration_eligible <- as.logical(data[[calibration_eligible_col]])
+    calibration_eligible[is.na(calibration_eligible)] <- FALSE
+  }
+  # Build df with standardized column names
+  df <- data %>%
+    mutate(
+      .dataset = as.character(.data[[dataset_col]]),
+      .subject = as.character(.data[[subject_col]]),
+      .diagnosis = as.character(.data[[diagnosis_col]]),
+      .age = suppressWarnings(as.numeric(.data[[age_col]])),
+      .slice_idx = suppressWarnings(as.numeric(.data[[slice_col]])),
+      .sex = suppressWarnings(as.numeric(.data[[sex_col]])),
+      .value = suppressWarnings(as.numeric(.data[[value_col]])),
+      .calibration_eligible = .env$calibration_eligible,
+      alignment_core_eligible = is.finite(.age) & is.finite(.slice_idx) &
+        .sex %in% c(0, 1) & is.finite(.value) & .value > 0
+    ) %>%
+    filter(alignment_core_eligible) # Only keep the rows eligible for alignmnent
+
+  if (!nrow(df)) {
+    return(list(
+      data = df,
+      parameters = tibble(),
+      summary = tibble(
+        input_rows = nrow(data),
+        core_eligible_rows = 0,
+        aligned_rows = 0,
+        min_cn_for_alignment = min_cn_for_alignment
+      )
+    ))
+  }
+
+  # Raw centile and zscores stored in df
+  raw_p <- score_against_reference_chart(df$.value, df$.age, df$.slice_idx, df$.sex, fit, site_neutral = site_neutral, prob_eps = prob_eps)
+  df <- df %>%
+    mutate(
+      raw_chart_p = raw_p,
+      raw_chart_z = qnorm(raw_chart_p),
+      raw_chart_centile = 100 * pnorm(raw_chart_z)
+    )
+
+  cn_calibration <- df %>%
+    filter(.diagnosis == cn_label, .calibration_eligible) # Keep only CN subjects
+
+  # Estimate for each dataset mean and std of z-scores
+  alignment_params <- cn_calibration %>%
+    group_by(.dataset) %>%
+    summarise(
+      n_cn_alignment = n(),
+      n_cn_subjects_alignment = n_distinct(.subject),
+      cn_raw_chart_z_mean = mean(raw_chart_z, na.rm = TRUE),
+      cn_raw_chart_z_sd = sd(raw_chart_z, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      enough_cn_for_alignment = n_cn_alignment >= min_cn_for_alignment &
+        is.finite(cn_raw_chart_z_sd) & cn_raw_chart_z_sd > 0
+    ) %>%
+    rename(dataset = .dataset)
+
+  # Proceed to alignement
+  aligned <- df %>%
+    left_join(alignment_params, by = c(".dataset" = "dataset")) %>%
+    filter(enough_cn_for_alignment) %>%
+    mutate(
+      aligned_chart_z = (raw_chart_z - cn_raw_chart_z_mean) / cn_raw_chart_z_sd, # Z-score normalization
+      aligned_chart_centile = 100 * pnorm(aligned_chart_z), # Convert to centile
+      harmonized_value = reference_chart_quantile(aligned_chart_z, .age, .slice_idx, .sex, fit, site_neutral = site_neutral, prob_eps = prob_eps)
+    ) %>%
+    select(
+      -starts_with("."),
+      -alignment_core_eligible
+    )
+
+  # Creates summary table about alignment process
+  alignment_summary <- tibble(
+    input_rows = nrow(data),
+    core_eligible_rows = nrow(df),
+    aligned_rows = nrow(aligned),
+    datasets_input = n_distinct(data[[dataset_col]]),
+    datasets_aligned = n_distinct(aligned[[dataset_col]]),
+    min_cn_for_alignment = min_cn_for_alignment
+  )
+  
+  # Returns aligned data, estimated site corrections, summary
+  list(
+    data = aligned,
+    parameters = alignment_params,
+    summary = alignment_summary
+  )
 }
