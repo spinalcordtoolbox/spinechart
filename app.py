@@ -31,7 +31,8 @@ slice_vert_map: dict[int, int] = (
     .to_dict()
 )
 
-# Load pre-computed centile curves (no R at serve time)
+# Load pre-computed centile curves
+print("Loading pre-computed centile curves...")
 centile_curves: dict[str, pd.DataFrame] = {}
 for metric in METRIC_MODEL_CONFIG:
     p = Path(f"output/predictions/centile_curves_{metric}.parquet")
