@@ -54,7 +54,7 @@ Then open http://127.0.0.1:8050/ in your web browser.
 
 ## Generating models
 
-Models can be generated using the following commands:
+Models and predictions can be generated using the following commands:
 
 ```bash
 # To generate the gamlss models
@@ -64,4 +64,15 @@ python build_grid.py
 # To generate model values on the prediction grid
 python run_normative_pipeline.py
 ```
-Data used to generate the models is automatically downloaded from the PAM50-normalized-metrics repo ([release r20260707](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/releases/tag/r20260707)). So far only [spine-generic_multi-subject](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/spine-generic_multi-subject) and [whole-spine](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/whole-spine) datasets are included. Future improvements could extend the pipeline to include more datasets by modifying the `find_datasets()` function in [`parsing.py`](https://github.com/spinalcordtoolbox/spinechart/blob/ly/43-download-data-from-release/parsing.py)
+Data used to generate the models is automatically downloaded from the PAM50-normalized-metrics repo ([release r20260707](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/releases/tag/r20260707)). So far only [spine-generic_multi-subject](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/spine-generic_multi-subject) and [whole-spine](https://github.com/spinalcordtoolbox/PAM50-normalized-metrics/tree/main/spinal_cord/whole-spine) datasets are included. Future improvements could extend the pipeline to include more datasets by modifying the `find_datasets()` function in [`parsing.py`](https://github.com/spinalcordtoolbox/spinechart/blob/ly/43-download-data-from-release/parsing.py). Specifically, more dataset directories can be added to the `candidate_dir` list. The list can later be replaced by an automatic discovery pipeline to detect all the datasets from the PAM50-normalized-metrics database.
+```python
+def find_datasets(root):
+    """
+    Finds dataset folders containing CSV + participants.tsv
+    (Currently only spine-generic_multi-subject and whole-spine)
+    """
+    candidate_dir = [
+        root / "spinal_cord" / "spine-generic_multi-subject",
+        root / "spinal_cord" / "whole-spine",
+    ]
+```
