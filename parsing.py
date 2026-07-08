@@ -30,6 +30,7 @@ def fetch_normative_database(url=RELEASE_URL, local_path=DATA_ROOT):
         Local path to the repository.
     """
     if Path(f"{local_path}/PAM50-normalized-metrics-{MODEL_RELEASE}").exists():
+        print(f"{local_path}/PAM50-normalized-metrics-{MODEL_RELEASE} already exists.")
         return local_path / f"PAM50-normalized-metrics-{MODEL_RELEASE}"
     
     print(f"Downloading PAM50-normalized-metrics release {MODEL_RELEASE}...")
