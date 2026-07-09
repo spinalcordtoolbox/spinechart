@@ -53,7 +53,7 @@ def prepare_new_data_for_metric(df, metric):
     return out[keep].dropna(subset=["value", "age", "slice_idx", "sex_bin"])
 
 
-def process_user_dataset(dataset_path, output_dir="output/alignment", cn_label="CN"):
+def process_user_dataset(dataset_path, output_dir="output/alignment", cn_labels=["CN", "HC"]):
     """Align the user's data to the normative database, and save the result in csv files
 
     Args:
@@ -81,7 +81,7 @@ def process_user_dataset(dataset_path, output_dir="output/alignment", cn_label="
 
         fit = load_model(cfg["rds_path"])
 
-        result = align_cohort_by_cn(fit, metric_df, cn_label=cn_label)
+        result = align_cohort_by_cn(fit, metric_df, cn_labels=cn_labels)
 
         results[metric] = result
 
@@ -115,16 +115,9 @@ if __name__ == "__main__":
         default="output/alignment",
         help="Directory where alignment results are saved"
     )
-
-    parser.add_argument(
-        "--cn-label",
-        type=str,
-        default="CN",
-        help="Label used for healthy controls in pathology column (default: CN)"
-    )
     
     args = parser.parse_args()
 
-    results = process_user_dataset(dataset_path=args.dataset, output_dir=args.output_dir, cn_label=args.cn_label)
+    results = process_user_dataset(dataset_path=args.dataset, output_dir=args.output_dir)
 
     print("\nDone.")

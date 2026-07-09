@@ -167,10 +167,9 @@ reference_chart_quantile <- function(z_value, age, slice_idx, sex_bin, fit, site
 
 
 # ---------------------------------------------------------------------------
-# Cohort-level CN-anchored alignment, bypass version.
+# Cohort-level alignment based on CN subjects.
 # Requires >= min_cn_for_alignment CN subjects per dataset to estimate a
-# per-site z-mean/z-sd correction. NOT applicable to n=1 uploads -- those
-# should use score_against_reference_chart directly (site-neutral only).
+# per-site z-mean/z-sd correction.
 # ---------------------------------------------------------------------------
 align_to_reference_chart_by_cn <- function(
   data,
@@ -182,7 +181,7 @@ align_to_reference_chart_by_cn <- function(
   age_col = "age",
   slice_col = "slice_idx",
   sex_col = "sex_bin",
-  cn_label = "CN",
+  cn_labels = c("CN", "HC"),
   min_cn_for_alignment = 10,
   # feature_id = NA_character_,
   calibration_eligible_col = NULL,
@@ -234,7 +233,7 @@ align_to_reference_chart_by_cn <- function(
     )
 
   cn_calibration <- df %>%
-    filter(.diagnosis == cn_label, .calibration_eligible) # Keep only CN subjects
+  filter(.diagnosis %in% cn_labels, .calibration_eligible) # Keep only CN or HC subjects
 
   # Estimate for each dataset mean and std of z-scores
   alignment_params <- cn_calibration %>%

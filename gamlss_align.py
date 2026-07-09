@@ -14,7 +14,7 @@ def align_cohort_by_cn(r_fit, df,
                         dataset_col="dataset_name", subject_col="participant_id",
                         diagnosis_col="pathology", value_col="value",
                         age_col="age", slice_col="slice_idx", sex_col="sex_bin",
-                        cn_label="HC", min_cn_for_alignment=10, site_neutral=True):
+                        cn_labels=["CN", "HC"], min_cn_for_alignment=10, site_neutral=True):
     """Align an external cohort to the normative GAMLSS reference chart
 
     Args:
@@ -27,7 +27,7 @@ def align_cohort_by_cn(r_fit, df,
         age_col (str, optional): column containing subject's age. Defaults to "age".
         slice_col (str, optional): column containing slices. Defaults to "slice_idx".
         sex_col (str, optional): column containing subject's sex. Defaults to "sex_bin".
-        cn_label (str, optional): label used for healthy patients. Defaults to "HC".
+        cn_label (list of str, optional): label used for healthy patients. Defaults to "CN" and "HC".
         min_cn_for_alignment (int, optional): minimum number of healthy subjects for alignement. Defaults to 10.
         site_neutral (bool, optional): Defaults to True.
 
@@ -62,7 +62,7 @@ def align_cohort_by_cn(r_fit, df,
         age_col=age_col,
         slice_col=slice_col,
         sex_col=sex_col,
-        cn_label=cn_label,
+        cn_label=ro.StrVector(cn_labels),
         min_cn_for_alignment=min_cn_for_alignment,
         site_neutral=site_neutral,
     )
