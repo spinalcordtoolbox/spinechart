@@ -3,7 +3,6 @@ gamlss_align.py
 -----------------
 Aligning out-of-sample studies using functions from gamlss_helper.R
 """
-import pandas as pd
 from gamlss_utils import _ensure_helpers
 from r_setup import configure_r_environment
 configure_r_environment()
@@ -36,7 +35,7 @@ def align_cohort_by_cn(r_fit, df,
         ValueError: error if columns are missing
 
     Returns:
-        dict: _description_
+        dict: contains aligned data, estimated site corrections, summary
     """
     _ensure_helpers()
     required = {age_col, slice_col, sex_col, value_col, dataset_col, subject_col, diagnosis_col}
