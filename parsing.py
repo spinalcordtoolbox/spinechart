@@ -9,7 +9,7 @@ from tqdm import tqdm
 from config.metrics import METRICS
 
 # Update this for each release
-MODEL_RELEASE = "r20260707"
+MODEL_RELEASE = "r20260709"
 ZIP_NAME = "Source code (zip)"
 
 RELEASE_URL = (
