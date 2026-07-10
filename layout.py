@@ -24,6 +24,7 @@ def create_layout(metrics_df, dem_df):
     return html.Div([
         dcc.Store(id="user-control-cohort"),
         dcc.Store(id="user-alignment-parameters"),
+        dcc.Store(id="user-aligned-cohort"),
         dcc.Store(id="user-single-patient"),
         dcc.Store(id="user-aligned-patient"),
         
@@ -87,7 +88,7 @@ def create_layout(metrics_df, dem_df):
                                     dbc.CardBody([
 
                                         html.P(
-                                            "Upload healthy controls used to estimate alignment parameters.",
+                                            "Upload cohort to estimate alignment parameters from the healthy controls.",
                                             className="text-muted small"
                                         ),
 

@@ -81,15 +81,29 @@ def register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map):
         Output("age-plot", "figure"),
         Input("metric", "value"),
         Input("level", "value"),
-        Input("sex-age", "value")
+        Input("sex-age", "value"),
+        Input("display-options", "value"),
+        State("user-aligned-cohort", "data"),
+        State("user-aligned-patient", "data"),
     )
-    def update_age(metric, level, sex):
+    def update_age(metric, level, sex, display, cohort_json, patient_json):
         sex_codes = [SEX_MAP[s] for s in sex]
         model_key = RAW_TO_MODEL_KEY.get(metric)
         curves = centile_curves.get(model_key)
+        
+        aligned_cohort = None
+        aligned_patient = None
+
+        if "cohort" in display and cohort_json is not None:
+            aligned_cohort = pd.read_json(StringIO(cohort_json[model_key]), orient="split")
+
+        if "patient" in display and patient_json is not None:
+            aligned_patient = pd.read_json(StringIO(patient_json[model_key]), orient="split")
         if curves is None:
             return go.Figure().add_annotation(text=f"No centile curves for '{metric}'", showarrow=False)
-        return plot_age_profile(curves, metrics_df, metric, level, sex_codes, slice_vert_map)
+        return plot_age_profile(curves, metrics_df, metric, level, sex_codes, slice_vert_map,
+                                show_normative=("normative" in display),
+                                aligned_cohort=aligned_cohort, aligned_patient=aligned_patient)
 
     # SPINAL PLOT
     # Plotting the spinal profile according to the chosen parameters
@@ -97,15 +111,29 @@ def register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map):
         Output("spinal-plot", "figure"),
         Input("metric", "value"),
         Input("age", "value"),
-        Input("sex-spinal", "value")
+        Input("sex-spinal", "value"),
+        Input("display-options", "value"),
+        State("user-aligned-cohort", "data"),
+        State("user-aligned-patient", "data"),
     )
-    def update_spinal(metric, age, sex):
+    def update_spinal(metric, age, sex, display, cohort_json, patient_json):
         sex_codes = [SEX_MAP[s] for s in sex]
         model_key = RAW_TO_MODEL_KEY.get(metric)
         curves = centile_curves.get(model_key)
+        
+        aligned_cohort = None
+        aligned_patient = None
+
+        if "cohort" in display and cohort_json is not None:
+            aligned_cohort = pd.read_json(StringIO(cohort_json[model_key]), orient="split")
+
+        if "patient" in display and patient_json is not None:
+            aligned_patient = pd.read_json(StringIO(patient_json[model_key]), orient="split")
         if curves is None:
             return go.Figure().add_annotation(text=f"No centile curves for '{metric}'", showarrow=False)
-        return plot_spinal_profile(curves, metrics_df, metric, age, sex_codes)
+        return plot_spinal_profile(curves, metrics_df, metric, age, sex_codes,
+                                    show_normative=("normative" in display),
+                                    aligned_cohort=aligned_cohort, aligned_patient=aligned_patient)
 
     # Metric thumbnail
     @app.callback(
@@ -148,6 +176,7 @@ def register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map):
         
     @app.callback(
         Output("user-alignment-parameters", "data"),
+        Output("user-aligned-cohort", "data"),
         Output("cohort-status", "children", allow_duplicate=True),
         Input("align-cohort", "n_clicks"),
         State("user-control-cohort", "data"),
@@ -165,9 +194,11 @@ def register_callbacks(app, metrics_df, dem_df, centile_curves, slice_vert_map):
         results = align_control_cohort(clean_metrics)
 
         parameters = {metric: result["parameters"].to_json(orient="split") for metric, result in results.items()}
+        aligned = {metric: result["data"].to_json(orient="split") for metric, result in results.items()}
 
         return (
             parameters,
+            aligned,
             html.Span("Alignment completed.", style={"color": "green"}),
         )
     

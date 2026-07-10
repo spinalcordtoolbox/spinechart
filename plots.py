@@ -187,7 +187,7 @@ def plot_heatmap(curves, metrics_df, metric, sex) :
 # Age profile
 # ---------------------------------------------------------------------------
 
-def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> go.Figure:
+def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map, show_normative=True, aligned_cohort=None, aligned_patient=None):
     """Plot the spinal profile, with centile curves
 
     Args:
@@ -196,6 +196,9 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> 
         metric (str): metric name
         sex (list): sexes selected
         slice_vert_map : {slice_idx: VertLevel} dict built from metrics_df
+        show_normative (bool): show normative plots if option selected in checkbox
+        aligned_cohort: show cohort data points if option selected in checkbox
+        aligned_patient: show patient data point if option selected in checkbox
 
     Returns:
         go.Figure: age profile
@@ -219,31 +222,79 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> 
             continue
 
         # Average centile columns across slices within this vertebral level
-        centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
-        centile_agg  = (
-            dfc.groupby("age")[centile_cols]
-            .mean()
-            .reset_index()
-            .sort_values("age")
-        )
-        # Raw counts at each age for hovertemplate
-        n_by_age = (
-            metrics_df.groupby("age")["participant_id"]
-            .nunique()
-            .rename("N")
-            .reset_index()
-        )
-        centile_agg = centile_agg.merge(n_by_age, on="age", how="left")
-        centile_agg["N"] = centile_agg["N"].fillna(0).astype(int)
+        if show_normative:
+            centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
+            centile_agg  = (
+                dfc.groupby("age")[centile_cols]
+                .mean()
+                .reset_index()
+                .sort_values("age")
+            )
+            # Raw counts at each age for hovertemplate
+            n_by_age = (
+                metrics_df.groupby("age")["participant_id"]
+                .nunique()
+                .rename("N")
+                .reset_index()
+            )
+            centile_agg = centile_agg.merge(n_by_age, on="age", how="left")
+            centile_agg["N"] = centile_agg["N"].fillna(0).astype(int)
 
-        _add_centile_bands(fig, centile_agg, x_col="age", color=color, sex_label=sex_label)
+            _add_centile_bands(fig, centile_agg, x_col="age", color=color, sex_label=sex_label)
 
-    # N counts from raw data for subtitle
-    dff_raw = metrics_df[
-        (metrics_df["VertLevel"] == level) &
-        metrics_df["sex_bin"].isin(sex)
-    ]
-    n_total = dff_raw["participant_id"].nunique()
+        # N counts from raw data for subtitle
+        dff_raw = metrics_df[
+            (metrics_df["VertLevel"] == level) &
+            metrics_df["sex_bin"].isin(sex)
+        ]
+        n_total = dff_raw["participant_id"].nunique()
+    
+    if aligned_cohort is not None:
+        dff = aligned_cohort[
+            (aligned_cohort["slice_idx"].isin(level_slices)) &
+            (aligned_cohort["sex_bin"].isin(sex))
+        ]
+         # Average all slices belonging to the vertebral level
+        dff = dff.groupby(["participant_id", "age", "sex_bin"], as_index=False)["value"].mean()
+
+        fig.add_trace(
+            go.Scatter(
+                x=dff["age"],
+                y=dff["value"],
+                mode="markers",
+                name="Aligned cohort",
+                marker=dict(
+                    color="black",
+                    size=6,
+                    opacity=0.35,
+                ),
+                customdata=dff["participant_id"],
+                hovertemplate=(
+                    "Subject: %{customdata}<br>"
+                    "Age: %{x:.1f}<br>"
+                    "Value: %{y:.2f}<extra></extra>"
+                )
+            )
+        )
+    
+    if aligned_patient is not None:
+
+        dff = aligned_patient[aligned_patient["slice_idx"].isin(level_slices)]
+        dff = dff.groupby(["participant_id", "age"], as_index=False)["value"].mean()
+
+        fig.add_trace(
+            go.Scatter(
+                x=dff["age"],
+                y=dff["value"],
+                mode="markers",
+                name="Patient",
+                marker=dict(
+                    color="red",
+                    size=10,
+                    symbol="diamond"
+                ),
+            )
+        )
     
 
     fig.update_layout(
@@ -259,7 +310,7 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map) -> 
 # Spinal profile
 # ---------------------------------------------------------------------------
 
-def plot_spinal_profile(curves, metrics_df, metric, age, sex):
+def plot_spinal_profile(curves, metrics_df, metric, age, sex, show_normative=True, aligned_cohort=None, aligned_patient=None):
     """Plot the spinal profile, with centile curves
 
     Args:
@@ -268,6 +319,9 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex):
         metric (str): metric name
         age (list): age range selected
         sex (list): sexes selected
+        show_normative (bool): show normative plots if option selected in checkbox
+        aligned_cohort: show cohort data points if option selected in checkbox
+        aligned_patient: show patient data point if option selected in checkbox
 
     Returns:
         go.Figure: spinal profile
@@ -288,33 +342,77 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex):
             continue
 
         # Average centile columns across the age range at each slice
-        centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
-        centile_agg  = (
-            dfc.groupby("slice_idx")[centile_cols]
-            .mean()
-            .reset_index()
-            .sort_values("slice_idx")
-        )
-        
-        dfc = curves[
-            curves["age"].between(age[0], age[1]) &
-            (curves["sex_bin"] == s)
-        ]
-        
-        # Raw N count for each slice for hovertemplate
-        n_by_slice = (
-            metrics_df[
-                metrics_df["age"].between(age[0], age[1]) &
-                (metrics_df["sex_bin"] == s)
+        if show_normative:
+            centile_cols = [c for c in dfc.columns if c.startswith("centile_")]
+            centile_agg  = (
+                dfc.groupby("slice_idx")[centile_cols]
+                .mean()
+                .reset_index()
+                .sort_values("slice_idx")
+            )
+            
+            dfc = curves[
+                curves["age"].between(age[0], age[1]) &
+                (curves["sex_bin"] == s)
             ]
-            .groupby("Slice (I->S)")["participant_id"]
-            .nunique()
-            .rename("N")
+            
+            # Raw N count for each slice for hovertemplate
+            n_by_slice = (
+                metrics_df[
+                    metrics_df["age"].between(age[0], age[1]) &
+                    (metrics_df["sex_bin"] == s)
+                ]
+                .groupby("Slice (I->S)")["participant_id"]
+                .nunique()
+                .rename("N")
+            )
+
+            centile_agg["N"] = centile_agg["slice_idx"].map(n_by_slice).fillna(0).astype(int)
+
+            _add_centile_bands(fig, centile_agg, x_col="slice_idx", color=color, sex_label=sex_label)
+            
+    if aligned_cohort is not None:
+        dff = aligned_cohort[
+            (aligned_cohort["age"].between(age[0], age[1])) &
+            (aligned_cohort["sex_bin"].isin(sex))
+        ]
+         # Average all slices belonging to the vertebral level
+        for pid, sub in dff.groupby("participant_id"):
+
+            sub = sub.sort_values("slice_idx")
+
+            fig.add_trace(
+                go.Scatter(
+                    x=sub["slice_idx"],
+                    y=sub["value"],
+                    mode="lines",
+                    line=dict(
+                        color="black",
+                        width=1,
+                    ),
+                    opacity=0.25,
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+    
+    if aligned_patient is not None:
+        
+        dff = aligned_patient.sort_values("slice_idx")
+
+        fig.add_trace(
+            go.Scatter(
+                x=dff["slice_idx"],
+                y=dff["value"],
+                mode="lines",
+                name="Patient",
+                line=dict(
+                    color="red",
+                    width=3,
+                ),
+                marker=dict(size=6),
+            )
         )
-
-        centile_agg["N"] = centile_agg["slice_idx"].map(n_by_slice).fillna(0).astype(int)
-
-        _add_centile_bands(fig, centile_agg, x_col="slice_idx", color=color, sex_label=sex_label)
 
     # Vertebral annotations from the raw data for subtitle
     dff_raw = metrics_df[
