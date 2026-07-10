@@ -48,7 +48,7 @@ Open a SHELL Terminal, go the `spinechart/` folder, activate the environment (se
 ```bash
 python app.py
 ```
-Then open http://127.0.0.1:8050/ in your web browser.
+This command will download the data and models (if not already installed). When finished downloading, a web browser window will open at the address: http://127.0.0.1:8050/.
 
 ### Exploring normative charts
 The GUI provides interactive visualizations of the normative models including:
