@@ -80,7 +80,10 @@ Raincloud plots of the demographic characteristics of the normative database use
 ### Aligning a single participant from uploaded cohort
 Apply previously estimated alignment parameters to a single participant:
 
-To run the alignment: on the left side bar, upload the single and click on align (~1 min to complete). Select 'Patient' display option to observe:
+To run the alignment: 
+1. On the left side bar, upload a zipped folder of a single participant. The folder should include `participants.tsv` with one single line and one `csv` file of the participant.
+2. Click on `Apply Alignement `(~1 min to complete). 
+3. Select 'Patient' display option to observe:
 <img width="1470" height="826" alt="image" src="https://github.com/user-attachments/assets/f3b81de2-5bdc-442e-898f-621d58cdccdb" />
 <img width="1460" height="801" alt="image" src="https://github.com/user-attachments/assets/e5191883-98bf-406b-9588-76677dbf7451" />
 
