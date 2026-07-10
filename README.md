@@ -38,6 +38,7 @@ Open R software, then in the R terminal, install the following packages:
 install.packages("gamlss")
 install.packages("gamlss.dist")
 install.packages("gamlss.add")
+install.packages("dplyr")
 ```
 
 ## Usage
