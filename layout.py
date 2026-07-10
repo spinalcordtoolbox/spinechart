@@ -22,6 +22,10 @@ def create_layout(metrics_df, dem_df):
     pathology_summary = summary_pathology(dem_df)
 
     return html.Div([
+        dcc.Store(id="user-control-cohort"),
+        dcc.Store(id="user-alignment-parameters"),
+        dcc.Store(id="user-single-patient"),
+        dcc.Store(id="user-aligned-patient"),
         
         html.Br(),
 
@@ -49,29 +53,137 @@ def create_layout(metrics_df, dem_df):
                             # LEFT SIDE BAR
                             html.Div([
 
-                                html.H3("Metric Selection"),
+                                html.H3(
+                                    "Metric Selection",
+                                    className="mb-3"
+                                ),
 
-                                html.Label('Metric'),
                                 dcc.Dropdown(
                                     options=[
                                         {"label": METRIC_CONFIG[m]["title"], "value": m}
                                         for m in METRICS
                                     ],
                                     value=METRICS[0],
-                                    id="metric"
+                                    id="metric",
+                                    className="mb-3"
                                 ),
 
-                                html.Div(id="metric-info-card"),
+                                html.Div(
+                                    id="metric-info-card",
+                                    className="mb-4"
+                                ),
 
-                            ], style={
-                                'width': '20%',
-                                'padding': '20px',
-                                'borderRight': '1px solid #ccc',
-                                'verticalAlign': 'top'
+
+                                # --------------------------------------------------
+                                # Cohort upload
+                                # --------------------------------------------------
+
+                                html.H3(
+                                    "Upload Cohort",
+                                    className="mb-3"
+                                ),
+
+                                dbc.Card(
+                                    dbc.CardBody([
+
+                                        html.P(
+                                            "Upload healthy controls used to estimate alignment parameters.",
+                                            className="text-muted small"
+                                        ),
+
+                                        dcc.Upload(
+                                            id="upload-cohort",
+                                            children=dbc.Button(
+                                                "Upload cohort (.zip)",
+                                                color="secondary",
+                                                className="w-100"
+                                            ),
+                                            multiple=False,
+                                            accept=".zip",
+                                        ),
+
+                                        dbc.Button(
+                                            "Align Cohort",
+                                            id="align-cohort",
+                                            color="primary",
+                                            className="w-100 mt-3"
+                                        ),
+
+                                        html.Div(
+                                            id="cohort-status",
+                                            className="mt-3"
+                                        )
+
+                                    ]),
+                                    className="mb-4"
+                                ),
+
+
+                                # --------------------------------------------------
+                                # Patient upload
+                                # --------------------------------------------------
+
+                                html.H3(
+                                    "Upload Patient",
+                                    className="mb-3"
+                                ),
+
+                                dbc.Card(
+                                    dbc.CardBody([
+
+                                        html.P(
+                                            "Upload a single patient, and apply correction using the previously estimated alignment.",
+                                            className="text-muted small"
+                                        ),
+
+                                        dcc.Upload(
+                                            id="upload-patient",
+                                            children=dbc.Button(
+                                                "Upload patient (.zip)",
+                                                color="secondary",
+                                                className="w-100"
+                                            ),
+                                            multiple=False,
+                                            accept=".zip",
+                                        ),
+
+                                        dbc.Button(
+                                            "Apply Alignment",
+                                            id="align-patient",
+                                            color="success",
+                                            className="w-100 mt-3"
+                                        ),
+
+                                        html.Div(
+                                            id="patient-status",
+                                            className="mt-3"
+                                        )
+
+                                    ])
+                                )
+
+                            ],
+                            style={
+                                "width": "20%",
+                                "padding": "20px",
+                                "borderRight": "1px solid #ccc",
+                                "verticalAlign": "top",
                             }),
 
                             # NORMATIVE CONTENT
                             html.Div([
+                                
+                                dbc.Checklist(
+                                    options=[
+                                        {"label":"Normative", "value":"normative"},
+                                        {"label":"Aligned cohort", "value":"cohort"},
+                                        {"label":"Patient", "value":"patient"},
+                                    ],
+
+                                    value=["normative"],
+                                    id="display-options",
+                                    inline=True
+                                ),
 
                                 # HEATMAP
                                 html.Div([
