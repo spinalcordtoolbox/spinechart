@@ -8,11 +8,42 @@ Deals with user's data
 
 from pathlib import Path
 import argparse
+import base64
+import zipfile
+import tempfile
 
 from parsing import load_dataset, clean_data
 from gamlss_utils import load_model
 from gamlss_align import align_cohort_by_cn
 from config.metrics import METRIC_MODEL_CONFIG
+
+
+def save_uploaded_zip(contents, filename):
+    """
+    Save temporarily the Dash uploaded zip and extract it. (For GUI pipeline)
+
+    Returns:
+        Path to extracted dataset directory
+    """
+
+    _, content_string = contents.split(",")
+
+    decoded = base64.b64decode(content_string)
+
+    tmp_dir = Path(tempfile.mkdtemp())
+
+    zip_path = tmp_dir / filename
+
+    with open(zip_path, "wb") as f:
+        f.write(decoded)
+
+    extract_dir = tmp_dir / "dataset"
+    extract_dir.mkdir()
+
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall(extract_dir)
+
+    return extract_dir
 
 
 def prepare_user_dataset(dataset_path):
@@ -52,30 +83,22 @@ def prepare_new_data_for_metric(df, metric):
     
     return out[keep].dropna(subset=["value", "age", "slice_idx", "sex_bin"])
 
-
-def process_user_dataset(dataset_path, output_dir="output/alignment", cn_labels=["CN", "HC"]):
-    """Align the user's data to the normative database, and save the result in csv files
+def align_control_cohort(clean_metrics, cn_labels=["CN", "HC"], prints=False):
+    """Align a healthy-control cohort to the normative database.
 
     Args:
-        dataset_path (str): path to user's data
-        output_dir (str, optional): path where to save the alignment results. Defaults to "output/alignment".
-        cn_label (str, optional): healthy patients' label in the user's dataset. Defaults to "CN".
+        clean_metrics (pd.DataFrame): metrics df
+        cn_labels (list of str, optional): Healthy subjects labels. Defaults to ["CN", "HC"].
+        prints (bool): to print messages or not
 
     Returns:
-        (dict): dictionary containing the cleaned metrics df, cleaned metadata df, alignement results
+        dict: Alignment results for every metric.
     """
-
-    output_dir = Path(output_dir)
-
-    print("Preparing user dataset...")
-    clean_metrics, clean_dem = prepare_user_dataset(dataset_path)
-
-    print("Running alignment...")
     results = {}
 
     for metric, cfg in METRIC_MODEL_CONFIG.items():
-
-        print(f"\nAligning metric: {metric}")
+        if prints:
+            print(f"\nAligning metric: {metric}")
 
         metric_df = prepare_new_data_for_metric(clean_metrics, metric)
 
@@ -85,12 +108,41 @@ def process_user_dataset(dataset_path, output_dir="output/alignment", cn_labels=
 
         results[metric] = result
 
+    return results
+    
+
+def save_alignment_results(results, output_dir):
+    """Saves alignment results locally. (For CLI pipeline)
+
+    Args:
+        results (_type_): _description_
+        output_dir (_type_): _description_
+    """
+    output_dir = Path(output_dir)
+
+    for metric, result in results.items():
+
         metric_dir = output_dir / metric
         metric_dir.mkdir(exist_ok=True, parents=True)
 
         result["data"].to_csv(metric_dir / "aligned_data.csv", index=False)
         result["parameters"].to_csv(metric_dir / "parameters.csv", index=False)
         result["summary"].to_csv(metric_dir / "summary.csv", index=False)
+
+def process_user_dataset(dataset_path, output_dir="output/alignment", cn_labels=["CN", "HC"]):
+    """
+    Complete user pipeline for CLI.
+    """
+
+    print("Preparing user dataset...")
+    clean_metrics, clean_dem = prepare_user_dataset(dataset_path)
+
+    print("Running alignment...")
+    results = align_control_cohort(clean_metrics, cn_labels=cn_labels, prints=True)
+
+    if output_dir is not None:
+        print("Saving results...")
+        save_alignment_results(results, output_dir)
 
     return {
         "metrics": clean_metrics,
@@ -120,4 +172,4 @@ if __name__ == "__main__":
 
     results = process_user_dataset(dataset_path=args.dataset, output_dir=args.output_dir)
 
-    print("\nDone.")
+    print("Done.")
