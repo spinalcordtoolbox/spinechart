@@ -23,6 +23,9 @@ python3.12 -m venv spinechart
 source spinechart/bin/activate # macOS/Linux
 spinechart\Scripts\activate # Windows
 
+# Or with conda:
+conda create -n spinechart python=3.12.13
+conda activate spinechart
 ```
 Install the requirements
 ```bash
