@@ -282,3 +282,69 @@ align_to_reference_chart_by_cn <- function(
     summary = alignment_summary
   )
 }
+
+
+apply_alignment_parameters <- function(
+    data,
+    fit,
+    parameters,
+    dataset_col = "dataset_name",
+    value_col = "value",
+    age_col = "age",
+    slice_col = "slice_idx",
+    sex_col = "sex_bin",
+    site_neutral = TRUE,
+    prob_eps = 1e-8
+) {
+
+    df <- data %>%
+        mutate(
+            .dataset = as.character(.data[[dataset_col]]),
+            .age = as.numeric(.data[[age_col]]),
+            .slice_idx = as.numeric(.data[[slice_col]]),
+            .sex = as.numeric(.data[[sex_col]]),
+            .value = as.numeric(.data[[value_col]])
+        )
+
+    raw_p <- score_against_reference_chart(
+        df$.value,
+        df$.age,
+        df$.slice_idx,
+        df$.sex,
+        fit,
+        site_neutral = site_neutral,
+        prob_eps = prob_eps
+    )
+
+    df <- df %>%
+        mutate(
+            raw_chart_p = raw_p,
+            raw_chart_z = qnorm(raw_p),
+            raw_chart_centile = 100 * pnorm(raw_chart_z)
+        )
+
+    aligned <- df %>%
+        left_join(parameters, by = c(".dataset" = "dataset")) %>%
+        mutate(
+            aligned_chart_z =
+                (raw_chart_z - cn_raw_chart_z_mean) /
+                cn_raw_chart_z_sd,
+
+            aligned_chart_centile =
+                100 * pnorm(aligned_chart_z),
+
+            harmonized_value =
+                reference_chart_quantile(
+                    aligned_chart_z,
+                    .age,
+                    .slice_idx,
+                    .sex,
+                    fit,
+                    site_neutral = site_neutral,
+                    prob_eps = prob_eps
+                )
+        ) %>%
+        select(-starts_with("."))
+
+    aligned
+}
