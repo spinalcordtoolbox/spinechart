@@ -69,7 +69,10 @@ Raincloud plots of the demographic characteristics of the normative database use
 ### Aligning a cohort
 **Goal:** Estimate alignment parameters from a new cohort of healthy individuals.
 
-To run the alignment: on the left side bar, upload the cohort and click on align (~1 min to complete). Select 'Aligned cohort' display option to observe:
+**To run the alignment:** 
+1. On the left side bar, upload the cohort.  One zipped folder with one `csv` per participant and `participants.tsv `inside the folder. See example data XX. 
+2. Click on align (~1 min to complete). 
+3. Select 'Aligned cohort' display option to observe:```
 <img width="1461" height="803" alt="image" src="https://github.com/user-attachments/assets/9b72f92d-041e-4b47-99d5-337a14a0eb1b" />
 <img width="1457" height="792" alt="image" src="https://github.com/user-attachments/assets/ae375684-d0ad-4def-9080-4b2eb7032545" />
 
