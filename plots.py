@@ -419,20 +419,33 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex, show_normative=Tru
         metrics_df["age"].between(age[0], age[1]) &
         metrics_df["sex_bin"].isin(sex)
     ]
-    if not dff_raw.empty:
-        ticks, mids, vlabels = get_vert_ticks(dff_raw)
-        for t in ticks:
-            fig.add_vline(x=t, line_width=1, line_dash="dot",
-                          line_color="gray", opacity=0.8)
-        for x, label in zip(mids, vlabels):
-            fig.add_annotation(x=x, y=0, xref="x", yref="paper",
-                               text=label, showarrow=False,
-                               font=dict(size=12, color="gray"))
-
     
     n_total = dff_raw["participant_id"].nunique() if not dff_raw.empty else 0
     xmin = metrics_df["Slice (I->S)"].min()
     xmax = metrics_df["Slice (I->S)"].max()
+    
+    # Vertebral annotations
+    ticks, mids, vlabels = get_vert_ticks(metrics_df)
+
+    for t in ticks:
+        fig.add_vline(
+            x=t,
+            line_width=1,
+            line_dash="dot",
+            line_color="gray",
+            opacity=0.8
+        )
+
+    for x, label in zip(mids, vlabels):
+        fig.add_annotation(
+            x=x,
+            y=0,
+            xref="x",
+            yref="paper",
+            text=label,
+            showarrow=False,
+            font=dict(size=12, color="gray")
+        )
 
     fig.update_layout(
         title=f"{cfg['title']} vs Slice (Age {age[0]}-{age[1]})<br><sup>N = {n_total}</sup>",
