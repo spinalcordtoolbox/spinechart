@@ -76,7 +76,7 @@ Raincloud plots of the demographic characteristics of the normative database use
 <img width="1461" height="803" alt="image" src="https://github.com/user-attachments/assets/9b72f92d-041e-4b47-99d5-337a14a0eb1b" />
 <img width="1457" height="792" alt="image" src="https://github.com/user-attachments/assets/ae375684-d0ad-4def-9080-4b2eb7032545" />
 
-### Aligning a single patient
+### Aligning a single participant from uploaded cohort
 Apply previously estimated alignment parameters to a single patient:
 
 To run the alignment: on the left side bar, upload the single and click on align (~1 min to complete). Select 'Patient' display option to observe:
