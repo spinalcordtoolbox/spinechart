@@ -51,8 +51,38 @@ python app.py
 ```
 Then open http://127.0.0.1:8050/ in your web browser.
 
+## GUI
 
-## Generating models
+### Exploring normative charts
+The GUI provides interactive visualizations of the normative models including:
+- Heatmap of normative values
+- Lifespan curves
+- Spinal profile plot
+Interactions:
+- Controls to select metric, age, vertebral level, sex to display
+- Link between heatmap and line charts: clicking on a a cell of the heatmap automatically updates age range, vertebral level, and sex on the line charts
+
+### Demographics of the normative database
+Raincloud plots of the demographic characteristics of the normative database used to build the models.
+
+### Aligning a cohort
+Estimate alignment parameters from the healthy patients of the cohort.
+
+To run the alignment: on the left side bar, upload the cohort and click on align (~1 min to complete). Select 'Aligned cohort' display option to observe:
+<img width="1461" height="803" alt="image" src="https://github.com/user-attachments/assets/9b72f92d-041e-4b47-99d5-337a14a0eb1b" />
+<img width="1457" height="792" alt="image" src="https://github.com/user-attachments/assets/ae375684-d0ad-4def-9080-4b2eb7032545" />
+
+### Aligning a single patient
+Apply previously estimated alignment parameters to a single patient:
+
+To run the alignment: on the left side bar, upload the single and click on align (~1 min to complete). Select 'Patient' display option to observe:
+<img width="1470" height="826" alt="image" src="https://github.com/user-attachments/assets/f3b81de2-5bdc-442e-898f-621d58cdccdb" />
+<img width="1460" height="801" alt="image" src="https://github.com/user-attachments/assets/e5191883-98bf-406b-9588-76677dbf7451" />
+
+
+## CLI
+
+### Generating models
 
 Models and predictions can be generated using the following commands:
 
@@ -76,3 +106,13 @@ def find_datasets(root):
         root / "spinal_cord" / "whole-spine",
     ]
 ```
+
+### Aligning data from a new cohort
+Align a cohort using the following command:
+```bash
+python user_pipeline.py /path/to/new/data --output-dir /path/to/output/directory
+```
+This command will create for each metric 3 csv files:
+- `aligned_data.csv`: the data of each patient the cohort after alignment to the normative reference
+- `parameters.csv`: the estimated alignment parameters
+- `summary.csv`: a summary of the alignment process
