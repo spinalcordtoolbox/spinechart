@@ -84,9 +84,8 @@ To run the alignment:
 1. On the left side bar, upload a zipped folder of a single participant. The folder should include `participants.tsv` with one single line and one `csv` file of the participant.
 2. Click on `Apply Alignement `(~1 min to complete). 
 3. Select 'Patient' display option to observe:
-<img width="1470" height="826" alt="image" src="https://github.com/user-attachments/assets/f3b81de2-5bdc-442e-898f-621d58cdccdb" />
-<img width="1460" height="801" alt="image" src="https://github.com/user-attachments/assets/e5191883-98bf-406b-9588-76677dbf7451" />
-
+<img width="1452" height="787" alt="image" src="https://github.com/user-attachments/assets/47ab8fc3-e641-4594-84f8-63ded9252d65" />
+<img width="1462" height="803" alt="image" src="https://github.com/user-attachments/assets/b9401863-e5ee-4b3f-85db-1d37b44755a1" />
 
 ## CLI
 
