@@ -13,7 +13,7 @@ import pandas as pd
 
 from config.metrics import METRIC_CONFIG
 from config.plotting import COLORS_SEX
-from config.demographics import SEX_MAP, AGE_DECADE_MAP
+from config.demographics import SEX_MAP, AGE_DECADE_MAP, SEX_LABEL_MAP
 from config.anatomy import VERT_DICT
 
 
@@ -256,6 +256,7 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map, sho
         ]
          # Average all slices belonging to the vertebral level
         dff = dff.groupby(["participant_id", "age", "sex_bin"], as_index=False)["value"].mean()
+        dff["sex_label"] = dff["sex_bin"].map(SEX_LABEL_MAP)
 
         fig.add_trace(
             go.Scatter(
@@ -268,10 +269,11 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map, sho
                     size=6,
                     opacity=0.35,
                 ),
-                customdata=dff["participant_id"],
+                customdata=dff[["participant_id", "sex_label"]],
                 hovertemplate=(
-                    "Subject: %{customdata}<br>"
+                    "Participant: %{customdata[0]}<br>"
                     "Age: %{x:.1f}<br>"
+                    "Sex: %{customdata[1]}<br>"
                     "Value: %{y:.2f}<extra></extra>"
                 )
             )
@@ -280,7 +282,8 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map, sho
     if aligned_patient is not None:
 
         dff = aligned_patient[aligned_patient["slice_idx"].isin(level_slices)]
-        dff = dff.groupby(["participant_id", "age"], as_index=False)["value"].mean()
+        dff = dff.groupby(["participant_id", "age", "sex_bin"], as_index=False)["value"].mean()
+        dff["sex_label"] = dff["sex_bin"].map(SEX_LABEL_MAP)
 
         fig.add_trace(
             go.Scatter(
@@ -289,10 +292,18 @@ def plot_age_profile(curves, metrics_df, metric, level, sex, slice_vert_map, sho
                 mode="markers",
                 name="Patient",
                 marker=dict(
-                    color="red",
+                    color="khaki",
                     size=10,
                     symbol="diamond"
                 ),
+                customdata=dff[["participant_id", "sex_label"]],
+                hovertemplate=(
+                    "Patient<br>"
+                    "Age: %{x:.1f}<br>"
+                    "Sex: %{customdata[1]}<br>"
+                    "Value: %{y:.2f}"
+                    "<extra></extra>"
+            )
             )
         )
     
@@ -380,6 +391,7 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex, show_normative=Tru
         for pid, sub in dff.groupby("participant_id"):
 
             sub = sub.sort_values("slice_idx")
+            sub["sex_label"] = sub["sex_bin"].map(SEX_LABEL_MAP)
 
             fig.add_trace(
                 go.Scatter(
@@ -392,13 +404,22 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex, show_normative=Tru
                     ),
                     opacity=0.25,
                     showlegend=False,
-                    hoverinfo="skip",
+                    customdata=sub[["age", "slice_idx", "sex_label", "participant_id"]],
+                    hovertemplate=(
+                        "Participant: %{customdata[3]}<br>"
+                        "Age: %{customdata[0]}<br>"
+                        "Sex: %{customdata[2]}<br>"
+                        "Slice: %{x}<br>"
+                        "Value: %{y:.2f}"
+                        "<extra></extra>"
+                        ),
                 )
             )
     
     if aligned_patient is not None:
         
         dff = aligned_patient.sort_values("slice_idx")
+        dff["sex_label"] = dff["sex_bin"].map(SEX_LABEL_MAP)
 
         fig.add_trace(
             go.Scatter(
@@ -407,10 +428,19 @@ def plot_spinal_profile(curves, metrics_df, metric, age, sex, show_normative=Tru
                 mode="lines",
                 name="Patient",
                 line=dict(
-                    color="red",
+                    color="khaki",
                     width=3,
                 ),
                 marker=dict(size=6),
+                customdata=dff[["age", "sex_label"]],
+                hovertemplate=(
+                    "Patient<br>"
+                    "Age: %{customdata[0]}<br>"
+                    "Sex: %{customdata[1]}<br>"
+                    "Slice: %{x}<br>"
+                    "Value: %{y:.2f}"
+                    "<extra></extra>"
+                ),
             )
         )
 

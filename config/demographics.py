@@ -12,3 +12,5 @@ SEX_MAP = {
     "Male": 0,
     "Female": 1
     }
+
+SEX_LABEL_MAP = {v: k for k, v in SEX_MAP.items()}
