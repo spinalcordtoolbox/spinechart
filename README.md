@@ -19,7 +19,7 @@ cd spinechart
 
 Create a virtual environment
 ```bash
-python -m venv spinechart
+python3.12 -m venv spinechart
 source spinechart/bin/activate # macOS/Linux
 spinechart\Scripts\activate # Windows
 
