@@ -29,8 +29,6 @@ Install the requirements
 pip install -r requirements.txt
 ```
 
-Install R and required R packages
-
 This project uses R via rpy2. Download and install R from: https://cran.r-project.org/
 
 Open R software, then in the R terminal, install the following packages:
@@ -38,7 +36,6 @@ Open R software, then in the R terminal, install the following packages:
 install.packages("gamlss")
 install.packages("gamlss.dist")
 install.packages("gamlss.add")
-install.packages("dplyr")
 install.packages("dplyr")
 ```
 
