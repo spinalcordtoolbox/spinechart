@@ -50,8 +50,6 @@ python app.py
 ```
 Then open http://127.0.0.1:8050/ in your web browser.
 
-## GUI
-
 ### Exploring normative charts
 The GUI provides interactive visualizations of the normative models including:
 - Heatmap of normative values
@@ -84,7 +82,9 @@ To run the alignment:
 <img width="1452" height="787" alt="image" src="https://github.com/user-attachments/assets/47ab8fc3-e641-4594-84f8-63ded9252d65" />
 <img width="1462" height="803" alt="image" src="https://github.com/user-attachments/assets/b9401863-e5ee-4b3f-85db-1d37b44755a1" />
 
-## CLI
+## Command Line Interface (CLI)
+
+Alternatively to using the web-based dashboard, spine-chart is also available via the Command Line Interface (CLI)
 
 ### Generating models
 
