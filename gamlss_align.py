@@ -2,8 +2,8 @@
 gamlss_align.py
 -----------------
 Aligning out-of-sample studies using functions from gamlss_helper.R
+Aligning subjects given previously estimated parameters using functions from gamlss_helper.R
 """
-import numpy as np
 
 from gamlss_utils import _ensure_helpers
 from r_setup import configure_r_environment
@@ -83,6 +83,23 @@ def apply_alignment_parameters(r_fit, df, parameters,
                                dataset_col="dataset_name", value_col="value",
                                age_col="age", slice_col="slice_idx",
                                sex_col="sex_bin", site_neutral=True):
+    """Aligning using given alignment parameters.
+
+    Args:
+        r_fit (gamlss.fit object): fitted gamlss model
+        df (pd.DataFrame): df containing the columns described below
+        parameters (pd.DataFrame): contains the alignment parameters (includes cn_raw_chart_z_mean and cn_raw_chart_z_sd)
+        dataset_col (str, optional): column containing the dataset name. Defaults to "dataset_name".
+        value_col (str, optional): column containing the metric value. Defaults to "value".
+        age_col (str, optional): _description_. Defaults to "age".
+        age_col (str, optional): column containing subject's age. Defaults to "age".
+        slice_col (str, optional): column containing slices. Defaults to "slice_idx".
+        sex_col (str, optional): column containing subject's sex. Defaults to "sex_bin".
+        site_neutral (bool, optional): Defaults to True.
+
+    Returns:
+        pd.DataFrame: containing corrected metric value
+    """
     _ensure_helpers()
 
     ro.globalenv["fit"] = r_fit
