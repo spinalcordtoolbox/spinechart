@@ -50,23 +50,24 @@ python app.py
 ```
 This command will download the data and models (if not already installed). When finished downloading, a web browser window will open at the address: http://127.0.0.1:8050/.
 
-### Exploring normative charts
-The GUI provides interactive visualizations of the normative models including:
+The web-based dashboard provides interactive visualizations of the normative models. 
+
+### Tab: Normative Charts
 - Heatmap of normative values
-- Lifespan curves
+- Age plot showing normative values at a specific vertebral level
 - Spinal profile plot
 Interactions:
 - Controls to select metric, age, vertebral level, sex to display
 - Link between heatmap and line charts: clicking on a a cell of the heatmap automatically updates age range, vertebral level, and sex on the line charts
 
-### Demographics of the normative database
+### Tab: Demographics
 Raincloud plots of the demographic characteristics of the normative database used to build the models.
 
 ### Aligning a cohort
 **Goal:** Estimate alignment parameters from a new cohort of healthy individuals.
 
 **To run the alignment:** 
-1. On the left side bar, upload the cohort.  One zipped folder with one `csv` per participant and `participants.tsv `inside the folder. See example data XX. 
+1. On the left side bar, upload data from the cohort. One zipped folder with one `csv` per participant and `participants.tsv `inside the folder. See [example data](https://github.com/user-attachments/files/29888968/TempleSocial.zip).
 2. Click on align (~1 min to complete). 
 3. Select 'Aligned cohort' display option to observe:```
 <img width="1461" height="803" alt="image" src="https://github.com/user-attachments/assets/9b72f92d-041e-4b47-99d5-337a14a0eb1b" />
